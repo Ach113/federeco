@@ -6,7 +6,7 @@ from tensorflow.keras.layers import Input, Embedding, Flatten, Multiply, Concate
 from config import *
 
 
-def collaborative_filtering_model(num_users, num_items):
+def collaborative_filtering_model(num_users: int, num_items: int) -> Model:
     params = MODEL_PARAMETERS['default_model']
 
     mf_dim = params['mf_dim']

@@ -1,25 +1,25 @@
 import numpy as np
 import pandas as pd
-# from model import collaborative_filtering_model
+import tensorflow as tf
+from typing import List
 
 from config import *
 
 
 class Client:
 
-    def __init__(self, client_id):
+    def __init__(self, client_id: int):
         self.client_id = client_id
         self.client_data = None
 
-    def set_client_data(self, data_array):
+    def set_client_data(self, data_array: List[np.ndarray]):
         self.client_data = pd.DataFrame({
             'user_id': data_array[0],
             'item_id': data_array[1],
             'label': data_array[2]
         })
 
-    def train(self, server_model):
-
+    def train(self, server_model: tf.keras.models.Model) -> np.ndarray:
         user_input, item_input = self.client_data['user_id'], self.client_data['item_id']
         labels = self.client_data['label']
 

@@ -1,13 +1,12 @@
-import random
 import scipy as sp
 import numpy as np
-import pandas as pd
 
 from config import *
 
+# TODO: convert to pandas
+
 
 def load_client_train_data():
-    # TODO: convert to pandas
     mat = sp.sparse.dok_matrix((NUM_USERS, NUM_ITEMS), dtype=np.float32)
     with open(TRAIN_DATA_PATH, "r") as f:
         line = f.readline()

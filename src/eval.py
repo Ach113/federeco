@@ -2,6 +2,8 @@ import math
 import heapq
 import numpy as np
 
+# TODO: optimize
+
 
 def evaluate_model(model, test_data, test_negatives, k):
     """

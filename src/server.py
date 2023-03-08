@@ -1,5 +1,6 @@
 import tqdm
 import tensorflow as tf
+from typing import List
 from tensorflow.keras.optimizers import Adam
 
 from dataset import *
@@ -11,10 +12,14 @@ from config import *
 
 
 def run_server(num_clients: int, num_rounds: int, save: bool):
+    """
+    defines server side ncf model and initiates the training process
+    saves the trained model if appropriate parameter is set
+    """
     # define server side model
     server_model = collaborative_filtering_model(NUM_USERS, NUM_ITEMS)
-    server_model.compile(optimizer=Adam(learning_rate=LEARNING_RATE, clipnorm=0.5), loss='binary_crossentropy',
-                         metrics=['accuracy'])
+    server_model.compile(optimizer=Adam(learning_rate=LEARNING_RATE, clipnorm=0.5), loss='binary_crossentropy')
+
     # train
     model = training_process(server_model, num_clients, num_rounds)
 
@@ -22,12 +27,15 @@ def run_server(num_clients: int, num_rounds: int, save: bool):
         model.save(MODEL_SAVE_PATH)
 
 
-def sample_clients(n_clients: int):
+def sample_clients(num_clients: int) -> List[Client]:
+    """
+    initialize `num_clients` clients along with their respective data
+    """
     clients = list()
     # load entire client dataset
     client_dataset = load_client_train_data()
     # sample random client ids
-    client_ids = np.random.choice(range(NUM_USERS), size=n_clients, replace=False)
+    client_ids = np.random.choice(range(NUM_USERS), size=num_clients, replace=False)
     for client_id in client_ids:
         c = Client(client_id)
         c.set_client_data(client_dataset[client_id])
@@ -36,7 +44,16 @@ def sample_clients(n_clients: int):
     return clients
 
 
-def training_process(server_model: tf.keras.models.Model, num_clients: int, num_rounds: int):
+def training_process(server_model: tf.keras.models.Model,
+                     num_clients: int,
+                     num_rounds: int) -> tf.keras.models.Model:
+    """
+    per single training round:
+        1. samples `num_clients` clients
+        2. trains each client locally `LOCAL_EPOCHS` number of times
+        3. aggregates weights across `num_clients` clients and sets them to server model
+    returns trained keras model
+    """
     test_data, negative_data = load_test_file(), load_negative_file()
     for _ in tqdm.tqdm(range(num_rounds)):
         clients = sample_clients(num_clients)
@@ -50,7 +67,13 @@ def training_process(server_model: tf.keras.models.Model, num_clients: int, num_
     return server_model
 
 
-def single_train_round(server_model, clients):
+def single_train_round(server_model: tf.keras.models.Model,
+                       clients: List[Client]) -> List[np.ndarray]:
+    """
+    single round of federated training.
+    Trains all clients locally on their respective datasets
+    Returns weights of client models as a list
+    """
     client_weights = list()
     for client in clients:
         weights = client.train(server_model)
@@ -58,12 +81,9 @@ def single_train_round(server_model, clients):
     return client_weights
 
 
-def federated_averaging(client_weights):
-    client_num = len(client_weights)
-    assert client_num != 0
-    w = client_weights[0]
-    for i in range(1, client_num):
-        w += client_weights[i]
-    w = w / client_num
+def federated_averaging(client_weights: np.ndarray) -> np.ndarray:
+    """
+    calculates the average of client weights
+    """
+    return np.sum(client_weights, axis=0) / len(client_weights)
 
-    return w
