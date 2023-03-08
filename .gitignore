@@ -128,4 +128,6 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-.idea
+# Sensitive or high-churn files
+/.idea/
+/pretrained/
