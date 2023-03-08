@@ -16,4 +16,9 @@ Install the dependencies: \
 And run `main.py` to execute the code and see the results.
     
 # Dataset
-The program uses [MovieLens 1M](https://grouplens.org/datasets/movielens/1m/) dataset. Processed version of it is provided in `data` folder. File paths and other configs are provided in `spec.py` file.
+The program uses [MovieLens 1M](https://grouplens.org/datasets/movielens/1m/) dataset. Processed version of it is provided in `data` folder. \
+
+# Parameters
+Training parameters, such as learning rate, number of global & local epochs, number of negative samples are all taken from 
+[Federated Neural Collaborative Filtering paper](https://arxiv.org/abs/2106.04405). \
+Parameters, along with file paths and other configurations are provided in `config.py` file.
