@@ -1,5 +1,4 @@
 import tqdm
-import time
 import tensorflow as tf
 from tensorflow.keras.optimizers import Adam
 
@@ -8,17 +7,19 @@ from client import Client
 from eval import evaluate_model
 from model import collaborative_filtering_model
 
-
 from config import *
 
 
-def run_server(num_clients: int, num_rounds: int):
+def run_server(num_clients: int, num_rounds: int, save: bool):
     # define server side model
     server_model = collaborative_filtering_model(NUM_USERS, NUM_ITEMS)
     server_model.compile(optimizer=Adam(learning_rate=LEARNING_RATE, clipnorm=0.5), loss='binary_crossentropy',
                          metrics=['accuracy'])
     # train
     model = training_process(server_model, num_clients, num_rounds)
+
+    if save:
+        model.save(MODEL_SAVE_PATH)
 
 
 def sample_clients(n_clients: int):
@@ -37,16 +38,11 @@ def sample_clients(n_clients: int):
 
 def training_process(server_model: tf.keras.models.Model, num_clients: int, num_rounds: int):
     test_data, negative_data = load_test_file(), load_negative_file()
-    for i in tqdm.tqdm(range(num_rounds)):
-        t0 = time.time()
-        # select clients for training
+    for _ in tqdm.tqdm(range(num_rounds)):
         clients = sample_clients(num_clients)
         w = single_train_round(server_model, clients)
         updated_server_weights = federated_averaging(w)
         server_model.set_weights(updated_server_weights)
-        # print(f'round {i+1}/{num_rounds} [{time.time() - t0:.2f}s]')
-        if i % 10 == 0:
-            server_model.save(f'pretrained/ncf_{i+1}.h5')
 
     hr, ndcg = evaluate_model(server_model, test_data, negative_data, 10)
     print(f'hit rage: {hr[-1]:.2f}, normalized discounted cumulative gain: {ndcg[-1]:.2f}')
