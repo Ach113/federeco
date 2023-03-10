@@ -42,4 +42,4 @@ def evaluate_model(model, test_data, test_negatives, k):
                 ndcgs[i].append(0)
     hits = [np.array(hits[i]).mean() for i in range(k)]
     ndcgs = [np.array(ndcgs[i]).mean() for i in range(k)]
-    return hits, ndcgs
+    return hits[-1], ndcgs[-1]

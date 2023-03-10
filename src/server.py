@@ -1,3 +1,4 @@
+import time
 import tqdm
 import tensorflow as tf
 from typing import List
@@ -55,14 +56,16 @@ def training_process(server_model: tf.keras.models.Model,
     returns trained keras model
     """
     test_data, negative_data = load_test_file(), load_negative_file()
+
     for _ in tqdm.tqdm(range(num_rounds)):
         clients = sample_clients(num_clients)
         w = single_train_round(server_model, clients)
         updated_server_weights = federated_averaging(w)
         server_model.set_weights(updated_server_weights)
 
+    t = time.time()
     hr, ndcg = evaluate_model(server_model, test_data, negative_data, 10)
-    print(f'hit rage: {hr[-1]:.2f}, normalized discounted cumulative gain: {ndcg[-1]:.2f}')
+    print(f'hit rate: {hr:.2f}, normalized discounted cumulative gain: {ndcg:.2f} [{time.time() - t:.2f}]s')
 
     return server_model
 
@@ -81,7 +84,7 @@ def single_train_round(server_model: tf.keras.models.Model,
     return client_weights
 
 
-def federated_averaging(client_weights: np.ndarray) -> np.ndarray:
+def federated_averaging(client_weights: List[np.ndarray]) -> np.ndarray:
     """
     calculates the average of client weights
     """

@@ -7,7 +7,7 @@ from config import *
 
 
 def collaborative_filtering_model(num_users: int, num_items: int) -> Model:
-    params = MODEL_PARAMETERS['default_model']
+    params = MODEL_PARAMETERS['FedNCF']
 
     mf_dim = params['mf_dim']
     layers = params['layers']
