@@ -1,7 +1,8 @@
+import torch
 import numpy as np
 import pandas as pd
-import tensorflow as tf
 from typing import List
+from torch import Tensor
 
 from config import *
 
@@ -19,12 +20,20 @@ class Client:
             'label': data_array[2]
         })
 
-    def train(self, server_model: tf.keras.models.Model) -> np.ndarray:
+    def train(self, server_model: torch.nn.Module) -> np.ndarray:
         user_input, item_input = self.client_data['user_id'], self.client_data['item_id']
         labels = self.client_data['label']
 
-        server_model.fit([user_input, item_input], labels,
-                         batch_size=BATCH_SIZE, epochs=LOCAL_EPOCHS, verbose=0, shuffle=True)
+        user_input = torch.tensor(user_input, dtype=torch.int)
+        item_input = torch.tensor(item_input, dtype=torch.int)
+        labels = torch.tensor(labels, dtype=torch.int)
+
+        optimizer = torch.optim.AdamW(server_model.parameters(), lr=LEARNING_RATE)
+        for _ in range(LOCAL_EPOCHS):
+            logits, loss = server_model(user_input, item_input, labels)
+            optimizer.zero_grad(set_to_none=True)
+            loss.backward()
+            optimizer.step()
 
         weights = np.array(server_model.get_weights(), dtype='object')
 

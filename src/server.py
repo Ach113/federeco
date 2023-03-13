@@ -1,13 +1,13 @@
 import time
 import tqdm
+import torch
 import tensorflow as tf
 from typing import List
-from tensorflow.keras.optimizers import Adam
 
 from dataset import *
 from client import Client
 from eval import evaluate_model
-from model import collaborative_filtering_model
+from model import NeuralCollaborativeFiltering as NCF
 
 from config import *
 
@@ -18,14 +18,9 @@ def run_server(num_clients: int, num_rounds: int, save: bool):
     saves the trained model if appropriate parameter is set
     """
     # define server side model
-    server_model = collaborative_filtering_model(NUM_USERS, NUM_ITEMS)
-    server_model.compile(optimizer=Adam(learning_rate=LEARNING_RATE, clipnorm=0.5), loss='binary_crossentropy')
-
+    server_model = NCF(NUM_USERS, NUM_ITEMS)
     # train
     model = training_process(server_model, num_clients, num_rounds)
-
-    if save:
-        model.save(MODEL_SAVE_PATH)
 
 
 def sample_clients(num_clients: int) -> List[Client]:
@@ -63,9 +58,9 @@ def training_process(server_model: tf.keras.models.Model,
         updated_server_weights = federated_averaging(w)
         server_model.set_weights(updated_server_weights)
 
-    t = time.time()
-    hr, ndcg = evaluate_model(server_model, test_data, negative_data, k=10)
-    print(f'hit rate: {hr:.2f}, normalized discounted cumulative gain: {ndcg:.2f} [{time.time() - t:.2f}]s')
+    # t = time.time()
+    # hr, ndcg = evaluate_model(server_model, test_data, negative_data, k=10)
+    # print(f'hit rate: {hr:.2f}, normalized discounted cumulative gain: {ndcg:.2f} [{time.time() - t:.2f}]s')
 
     return server_model
 
