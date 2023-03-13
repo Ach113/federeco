@@ -26,10 +26,10 @@ def evaluate_model(model: tf.keras.Model,
     hits, ndcgs = list(), list()
     for i, user in enumerate(users):
         item = items[i]
-        negatives = negatives[i] + [item]
-        pred = model.predict([np.full(len(negatives), user, dtype='int32'), np.array(negatives)],
-                             batch_size=100, verbose=0, workers=n_workers)
-        map_item_score = dict(zip(negatives, pred))
+        item_input = np.array(negatives[i] + [item])
+        user_input = np.full(len(item_input), user, dtype='int32')
+        pred = model.predict([user_input, item_input], batch_size=100, verbose=0, workers=n_workers)
+        map_item_score = dict(zip(item_input, pred))
         rank_list = heapq.nlargest(k, map_item_score, key=map_item_score.get)
         hr, ndcg = get_metrics(rank_list, item)
         hits.append(hr)
