@@ -55,7 +55,7 @@ def training_process(server_model: tf.keras.models.Model,
         3. aggregates weights across `num_clients` clients and sets them to server model
     returns trained keras model
     """
-    test_data, negative_data = load_test_file(), load_negative_file()
+    test_data, negatives = load_test_file(), load_negative_file()
 
     for _ in tqdm.tqdm(range(num_rounds)):
         clients = sample_clients(num_clients)
@@ -64,7 +64,8 @@ def training_process(server_model: tf.keras.models.Model,
         server_model.set_weights(updated_server_weights)
 
     t = time.time()
-    hr, ndcg = evaluate_model(server_model, test_data, negative_data, k=10)
+    users, items = zip(*test_data)
+    hr, ndcg = evaluate_model(server_model, users, items, negatives, k=10)
     print(f'hit rate: {hr:.2f}, normalized discounted cumulative gain: {ndcg:.2f} [{time.time() - t:.2f}]s')
 
     return server_model
