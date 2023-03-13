@@ -64,7 +64,7 @@ def training_process(server_model: tf.keras.models.Model,
         server_model.set_weights(updated_server_weights)
 
     t = time.time()
-    hr, ndcg = evaluate_model(server_model, test_data, negative_data, 10)
+    hr, ndcg = evaluate_model(server_model, test_data, negative_data, k=10)
     print(f'hit rate: {hr:.2f}, normalized discounted cumulative gain: {ndcg:.2f} [{time.time() - t:.2f}]s')
 
     return server_model

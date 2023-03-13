@@ -1,45 +1,35 @@
+"""
+based on code taken from: https://github.com/hexiangnan/neural_collaborative_filtering/blob/master/evaluate.py
+"""
 import math
 import heapq
 import numpy as np
 
-# TODO: optimize
+# TODO!: Seems very slow, perhaps can be optimized
 
 
-def evaluate_model(model, test_data, test_negatives, k):
+def get_metrics(rank_list, item):
+    if item not in rank_list:
+        return 0, 0
+    return 1, math.log(2) / math.log(rank_list.index(item) + 2)
+
+
+def evaluate_model(model, test_ratings, test_negatives, k: int, n_threads: int = 1):
     """
     Evaluate the performance (Hit_Ratio, NDCG) of top-K recommendation
     Return: score of each test rating.
     """
-    hits, ndcgs = [[] for _ in range(k)], [[] for _ in range(k)]
-    for idx in range(len(test_data)):
-        rating = test_data[idx]
-        items = test_negatives[idx]
-        user_id = rating[0]
-        gtItem = rating[1]
-        items.append(gtItem)
-        # Get prediction scores
-        map_item_score = {}
-        users = np.full(len(items), user_id, dtype='int32')
-        predictions = model.predict([users, np.array(items)],
-                                         batch_size=100, verbose=0)
-        for i in range(len(items)):
-            item = items[i]
-            map_item_score[item] = predictions[i]
-        items.pop()
-        # Evaluate top rank list
-        ranklist = heapq.nlargest(k, map_item_score, key=map_item_score.get)
-        if gtItem in ranklist:
-            p = ranklist.index(gtItem)
-            for i in range(p):
-                hits[i].append(0)
-                ndcgs[i].append(0)
-            for i in range(p, k):
-                hits[i].append(1)
-                ndcgs[i].append(math.log(2) / math.log(ranklist.index(gtItem) + 2))
-        else:
-            for i in range(k):
-                hits[i].append(0)
-                ndcgs[i].append(0)
-    hits = [np.array(hits[i]).mean() for i in range(k)]
-    ndcgs = [np.array(ndcgs[i]).mean() for i in range(k)]
-    return hits[-1], ndcgs[-1]
+    hits, ndcgs = list(), list()
+    users, items = zip(*test_ratings)
+    for i, user in enumerate(users):
+        item = items[i]
+        negatives = test_negatives[i] + [item]
+        pred = model.predict([np.full(len(negatives), user, dtype='int32'), np.array(negatives)],
+                             batch_size=100, verbose=0, workers=4)
+        map_item_score = dict(zip(negatives, pred))
+        rank_list = heapq.nlargest(k, map_item_score, key=map_item_score.get)
+        hr, ndcg = get_metrics(rank_list, item)
+        hits.append(hr)
+        ndcgs.append(ndcg)
+
+    return np.array(hits).mean(), np.array(ndcgs).mean()
