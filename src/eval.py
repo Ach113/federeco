@@ -11,6 +11,12 @@ from typing import Tuple, List
 
 
 def get_metrics(rank_list: List, item: int) -> Tuple[int, float]:
+    """
+    Used for calculating hit rate & normalized discounted cumulative gain (ndcg)
+    :param rank_list: Top-k list of recommendations
+    :param item: item we are trying to match with `rank_list`
+    :return: tuple containing 1/0 indicating hit/no hit & ndcg
+    """
     if item not in rank_list:
         return 0, 0
     return 1, math.log(2) / math.log(rank_list.index(item) + 2)
