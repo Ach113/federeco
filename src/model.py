@@ -1,11 +1,8 @@
 import torch
 from torch import Tensor
+from typing import Optional, Tuple
 from torch.nn import functional as F
-
 from config import *
-
-
-# TODO: add proper parameters to the model
 
 
 class NeuralCollaborativeFiltering(torch.nn.Module):
@@ -31,7 +28,9 @@ class NeuralCollaborativeFiltering(torch.nn.Module):
             self.mlp.append(torch.nn.ReLU())
         self.output_layer = torch.nn.Linear(in_features=24, out_features=1)
 
-    def forward(self, user_input: Tensor, item_input: Tensor, target: Tensor = None):
+    def forward(self, user_input: Tensor,
+                item_input: Tensor,
+                target: Optional[Tensor] = None) -> Tuple[Tensor, Optional[float]]:
         # matrix factorization
         mf_user_latent = torch.nn.Flatten()(self.mf_embedding_user(user_input))
         mf_item_latent = torch.nn.Flatten()(self.mf_embedding_user(item_input))
