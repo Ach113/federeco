@@ -1,7 +1,8 @@
 import time
+import copy
 import tqdm
 import torch
-import tensorflow as tf
+import collections
 from typing import List
 
 from dataset import *
@@ -40,9 +41,9 @@ def sample_clients(num_clients: int) -> List[Client]:
     return clients
 
 
-def training_process(server_model: tf.keras.models.Model,
+def training_process(server_model: torch.nn.Module,
                      num_clients: int,
-                     num_rounds: int) -> tf.keras.models.Model:
+                     num_rounds: int) -> torch.nn.Module:
     """
     per single training round:
         1. samples `num_clients` clients
@@ -50,23 +51,24 @@ def training_process(server_model: tf.keras.models.Model,
         3. aggregates weights across `num_clients` clients and sets them to server model
     returns trained keras model
     """
-    test_data, negative_data = load_test_file(), load_negative_file()
+    test_data, negatives = load_test_file(), load_negative_file()
 
     for _ in tqdm.tqdm(range(num_rounds)):
         clients = sample_clients(num_clients)
         w = single_train_round(server_model, clients)
         updated_server_weights = federated_averaging(w)
-        server_model.set_weights(updated_server_weights)
+        server_model.load_state_dict(updated_server_weights)
 
-    # t = time.time()
-    # hr, ndcg = evaluate_model(server_model, test_data, negative_data, k=10)
-    # print(f'hit rate: {hr:.2f}, normalized discounted cumulative gain: {ndcg:.2f} [{time.time() - t:.2f}]s')
+    t = time.time()
+    users, items = zip(*test_data)
+    hr, ndcg = evaluate_model(server_model, users, items, negatives, k=10, n_workers=12)
+    print(f'hit rate: {hr:.2f}, normalized discounted cumulative gain: {ndcg:.2f} [{time.time() - t:.2f}]s')
 
     return server_model
 
 
-def single_train_round(server_model: tf.keras.models.Model,
-                       clients: List[Client]) -> List[np.ndarray]:
+def single_train_round(server_model: torch.nn.Module,
+                       clients: List[Client]) -> List[collections.OrderedDict]:
     """
     single round of federated training.
     Trains all clients locally on their respective datasets
@@ -79,9 +81,18 @@ def single_train_round(server_model: tf.keras.models.Model,
     return client_weights
 
 
-def federated_averaging(client_weights: List[np.ndarray]) -> np.ndarray:
+def federated_averaging(client_weights: List[collections.OrderedDict]) -> collections.OrderedDict:
     """
     calculates the average of client weights
     """
-    return np.sum(client_weights, axis=0) / len(client_weights)
+    keys = client_weights[0].keys()
+    averages = copy.deepcopy(client_weights[0])
+
+    for w in client_weights[1:]:
+        for key in keys:
+            averages[key] += w[key]
+
+    for key in keys:
+        averages[key] /= len(client_weights)
+    return averages
 

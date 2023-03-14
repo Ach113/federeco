@@ -13,40 +13,48 @@ class NeuralCollaborativeFiltering(torch.nn.Module):
     def __init__(self, num_users: int, num_items: int):
         super().__init__()
         params = MODEL_PARAMETERS['FedNCF']
-        self.num_users = num_users
-        self.num_items = num_items
-        self.mf_dim = params['mf_dim']
-        self.layers = params['layers']
-        self.reg_layers = params['reg_layers']
-        self.reg_mf = params['reg_mf']
+        layers = params['layers']
+        mf_dim = params['mf_dim']
+        mlp_dim = int(layers[0] / 2)
 
-        self.mf_embedding_user = torch.nn.Embedding(num_embeddings=self.num_users, embedding_dim=self.mf_dim)
-        self.mf_embedding_item = torch.nn.Embedding(num_embeddings=self.num_items, embedding_dim=self.mf_dim)
+        reg_layers = params['reg_layers']
+        reg_mf = params['reg_mf']
 
-        self.mlp_embedding_user = torch.nn.Embedding(num_embeddings=self.num_users, embedding_dim=int(self.layers[0] / 2))
-        self.mlp_embedding_item = torch.nn.Embedding(num_embeddings=self.num_items, embedding_dim=int(self.layers[0] / 2))
+        self.mf_embedding_user = torch.nn.Embedding(num_embeddings=num_users, embedding_dim=mf_dim)
+        self.mf_embedding_item = torch.nn.Embedding(num_embeddings=num_items, embedding_dim=mf_dim)
 
+        self.mlp_embedding_user = torch.nn.Embedding(num_embeddings=num_users, embedding_dim=mlp_dim)
+        self.mlp_embedding_item = torch.nn.Embedding(num_embeddings=num_items, embedding_dim=mlp_dim)
 
-    def forward(self, user_input: Tensor, item_input: Tensor, target: Tensor):
+        self.mlp = torch.nn.ModuleList()
+        current_dim = 32
+        for idx in range(1, len(layers)):
+            self.mlp.append(torch.nn.Linear(current_dim, layers[idx]))
+            current_dim = layers[idx]
+            self.mlp.append(torch.nn.ReLU())
+        self.output_layer = torch.nn.Linear(in_features=24, out_features=1)
+
+    def forward(self, user_input: Tensor, item_input: Tensor, target: Tensor = None):
         # matrix factorization
         mf_user_latent = torch.nn.Flatten()(self.mf_embedding_user(user_input))
-        mf_item_latent = torch.nn.Flatten()(self.mf_embedding_item(item_input))
+        mf_item_latent = torch.nn.Flatten()(self.mf_embedding_user(item_input))
         mf_vector = torch.mul(mf_user_latent, mf_item_latent)
-
         # mlp
-        mlp_user_latent = torch.nn.Flatten()(self.mlp_embedding_user(user_input))
-        mlp_item_latent = torch.nn.Flatten()(self.mlp_embedding_item(item_input))
-        mlp_vector = torch.mul(mlp_user_latent, mlp_item_latent)
+        mlp_user_latent = torch.nn.Flatten()(self.mf_embedding_user(user_input))
+        mlp_item_latent = torch.nn.Flatten()(self.mf_embedding_item(item_input))
+        mlp_vector = torch.cat([mlp_user_latent, mlp_item_latent], dim=1)
 
-        for idx in range(1, len(self.layers)):
-            layer = torch.nn.Linear(mlp_vector.shape[1], self.layers[idx])
-            mlp_vector = torch.nn.ReLU()(layer(mlp_vector))
+        for layer in self.mlp:
+            mlp_vector = layer(mlp_vector)
 
-        predict_vector = torch.cat([mf_vector, mlp_vector], axis=1)
-        logits = torch.nn.Linear(in_features=predict_vector.shape[1], out_features=1)(predict_vector)
+        predict_vector = torch.cat([mf_vector, mlp_vector], dim=1)
+        logits = self.output_layer(predict_vector)
+
+        loss = None
+        if target is not None:
+            target = target.view(target.shape[0], 1).to(torch.float32)
+            loss = F.binary_cross_entropy_with_logits(logits, target)
+
         logits = torch.nn.Sigmoid()(logits)
-
-        target = target.view(target.shape[0], 1).to(torch.float32)
-        loss = F.binary_cross_entropy(logits, target)
 
         return logits, loss

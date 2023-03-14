@@ -1,5 +1,6 @@
 import torch
 import numpy as np
+import collections
 import pandas as pd
 from typing import List
 from torch import Tensor
@@ -20,7 +21,7 @@ class Client:
             'label': data_array[2]
         })
 
-    def train(self, server_model: torch.nn.Module) -> np.ndarray:
+    def train(self, server_model: torch.nn.Module) -> collections.OrderedDict:
         user_input, item_input = self.client_data['user_id'], self.client_data['item_id']
         labels = self.client_data['label']
 
@@ -35,6 +36,4 @@ class Client:
             loss.backward()
             optimizer.step()
 
-        weights = np.array(server_model.get_weights(), dtype='object')
-
-        return weights
+        return server_model.state_dict()
