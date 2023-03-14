@@ -21,7 +21,10 @@ def run_server(num_clients: int, num_rounds: int, save: bool):
     server_model = NCF(NUM_USERS, NUM_ITEMS)
     server_model.to(DEVICE)
     # train
-    model = training_process(server_model, num_clients, num_rounds)
+    trained_model = training_process(server_model, num_clients, num_rounds)
+
+    if save:
+        torch.save(trained_model.state_dict(), MODEL_SAVE_PATH)
 
 
 def sample_clients(num_clients: int) -> List[Client]:
