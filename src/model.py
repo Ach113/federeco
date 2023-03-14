@@ -2,6 +2,7 @@ import torch
 from torch import Tensor
 from typing import Optional, Tuple
 from torch.nn import functional as F
+
 from config import *
 
 
@@ -14,11 +15,11 @@ class NeuralCollaborativeFiltering(torch.nn.Module):
         mf_dim = params['mf_dim']
         mlp_dim = int(layers[0] / 2)
 
-        self.mf_embedding_user = torch.nn.Embedding(num_embeddings=num_users, embedding_dim=mf_dim)
-        self.mf_embedding_item = torch.nn.Embedding(num_embeddings=num_items, embedding_dim=mf_dim)
+        self.mf_embedding_user = torch.nn.Embedding(num_embeddings=num_users, embedding_dim=mf_dim, device=DEVICE)
+        self.mf_embedding_item = torch.nn.Embedding(num_embeddings=num_items, embedding_dim=mf_dim, device=DEVICE)
 
-        self.mlp_embedding_user = torch.nn.Embedding(num_embeddings=num_users, embedding_dim=mlp_dim)
-        self.mlp_embedding_item = torch.nn.Embedding(num_embeddings=num_items, embedding_dim=mlp_dim)
+        self.mlp_embedding_user = torch.nn.Embedding(num_embeddings=num_users, embedding_dim=mlp_dim, device=DEVICE)
+        self.mlp_embedding_item = torch.nn.Embedding(num_embeddings=num_items, embedding_dim=mlp_dim, device=DEVICE)
 
         self.mlp = torch.nn.ModuleList()
         current_dim = 32
@@ -26,7 +27,7 @@ class NeuralCollaborativeFiltering(torch.nn.Module):
             self.mlp.append(torch.nn.Linear(current_dim, layers[idx]))
             current_dim = layers[idx]
             self.mlp.append(torch.nn.ReLU())
-        self.output_layer = torch.nn.Linear(in_features=24, out_features=1)
+        self.output_layer = torch.nn.Linear(in_features=24, out_features=1, device=DEVICE)
 
     def forward(self, user_input: Tensor,
                 item_input: Tensor,

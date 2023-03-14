@@ -19,12 +19,12 @@ def run_server(num_clients: int, num_rounds: int, save: bool):
     """
     # define server side model
     server_model = NCF(NUM_USERS, NUM_ITEMS)
-    server_model.to(DEVICE)
+    # server_model.to(DEVICE)
     # train
     trained_model = training_process(server_model, num_clients, num_rounds)
 
     if save:
-        torch.save(trained_model.state_dict(), MODEL_SAVE_PATH)
+        torch.save(trained_model.state_dict(), 'pretrained/ncf_100_pytorch.h5')
 
 
 def sample_clients(num_clients: int) -> List[Client]:

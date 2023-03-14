@@ -31,9 +31,9 @@ def evaluate_model(model: torch.nn.Module,
     hits, ndcgs = list(), list()
     for i, user in enumerate(users):
         item = items[i]
-        item_input = torch.tensor(np.array(negatives[i] + [item]), dtype=torch.int)
-        user_input = torch.tensor(np.full(len(item_input), user, dtype='int32'), dtype=torch.int)
-        item_input, user_input = item_input.to(DEVICE), user_input.to(DEVICE)
+        item_input = torch.tensor(np.array(negatives[i] + [item]), dtype=torch.int, device=DEVICE)
+        user_input = torch.tensor(np.full(len(item_input), user, dtype='int32'), dtype=torch.int, device=DEVICE)
+
         with torch.no_grad():
             pred, _ = model(user_input, item_input)
         map_item_score = dict(zip(item_input, pred))
