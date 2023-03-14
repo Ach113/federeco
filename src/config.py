@@ -1,3 +1,7 @@
+import torch
+
+DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
 TRAIN_DATA_PATH = 'data/ml-1m.train.rating'
 TEST_DATA_PATH = 'data/ml-1m.test.rating'
 NEGATIVE_DATA_PATH = 'data/ml-1m.test.negative'

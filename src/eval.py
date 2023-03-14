@@ -7,6 +7,8 @@ import heapq
 import numpy as np
 from typing import Tuple, List
 
+from config import DEVICE
+
 # TODO!: Seems very slow, perhaps can be optimized
 
 
@@ -24,7 +26,7 @@ def get_metrics(rank_list: List, item: int) -> Tuple[int, float]:
 
 def evaluate_model(model: torch.nn.Module,
                    users: List[int], items: List[int], negatives: List[List[int]],
-                   k: int, n_workers: int = 1) -> Tuple[float, float]:
+                   k: int) -> Tuple[float, float]:
     """
     calculates hit rate and normalized discounted cumulative gain for each user across each item in `negatives`
     returns average of top-k list of hit rates and ndcgs
@@ -34,6 +36,7 @@ def evaluate_model(model: torch.nn.Module,
         item = items[i]
         item_input = torch.tensor(np.array(negatives[i] + [item]), dtype=torch.int)
         user_input = torch.tensor(np.full(len(item_input), user, dtype='int32'), dtype=torch.int)
+        item_input, user_input = item_input.to(DEVICE), user_input.to(DEVICE)
         with torch.no_grad():
             pred, _ = model(user_input, item_input)
         map_item_score = dict(zip(item_input, pred))

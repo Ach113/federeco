@@ -17,9 +17,6 @@ class NeuralCollaborativeFiltering(torch.nn.Module):
         mf_dim = params['mf_dim']
         mlp_dim = int(layers[0] / 2)
 
-        reg_layers = params['reg_layers']
-        reg_mf = params['reg_mf']
-
         self.mf_embedding_user = torch.nn.Embedding(num_embeddings=num_users, embedding_dim=mf_dim)
         self.mf_embedding_item = torch.nn.Embedding(num_embeddings=num_items, embedding_dim=mf_dim)
 

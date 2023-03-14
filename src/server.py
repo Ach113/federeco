@@ -1,7 +1,6 @@
 import time
 import copy
 import tqdm
-import torch
 import collections
 from typing import List
 
@@ -20,6 +19,7 @@ def run_server(num_clients: int, num_rounds: int, save: bool):
     """
     # define server side model
     server_model = NCF(NUM_USERS, NUM_ITEMS)
+    server_model.to(DEVICE)
     # train
     model = training_process(server_model, num_clients, num_rounds)
 
@@ -61,7 +61,7 @@ def training_process(server_model: torch.nn.Module,
 
     t = time.time()
     users, items = zip(*test_data)
-    hr, ndcg = evaluate_model(server_model, users, items, negatives, k=10, n_workers=12)
+    hr, ndcg = evaluate_model(server_model, users, items, negatives, k=10)
     print(f'hit rate: {hr:.2f}, normalized discounted cumulative gain: {ndcg:.2f} [{time.time() - t:.2f}]s')
 
     return server_model

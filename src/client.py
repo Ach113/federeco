@@ -29,6 +29,8 @@ class Client:
         item_input = torch.tensor(item_input, dtype=torch.int)
         labels = torch.tensor(labels, dtype=torch.int)
 
+        user_input, item_input, labels = user_input.to(DEVICE), item_input.to(DEVICE), labels.to(DEVICE)
+
         optimizer = torch.optim.AdamW(server_model.parameters(), lr=LEARNING_RATE)
         for _ in range(LOCAL_EPOCHS):
             logits, loss = server_model(user_input, item_input, labels)
