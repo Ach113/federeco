@@ -1,8 +1,10 @@
 # federeco
-Neural collaborative filtering recommendation system utilizing federated averaging for data privacy. 
+Neural collaborative filtering recommendation system utilizing federated averaging for data privacy.
+Implementation is done using both Tensorflow/Keras and PyTorch frameworks. 
+Main branch includes Tensorflow implementation, with experimental PyTorch implementation on `pytorch` branch.
 # Requirements
 numpy 1.22.1 \
-tensorflow 2.9.1 \
+tensorflow 2.9.1 or torch 1.10.1 \
 pandas 1.1.3 \
 tqdm 4.64.0 \
 scipy 1.7.3 
