@@ -25,17 +25,24 @@ class Client:
         user_input, item_input = self.client_data['user_id'], self.client_data['item_id']
         labels = self.client_data['label']
 
-        user_input = torch.tensor(user_input, dtype=torch.int)
-        item_input = torch.tensor(item_input, dtype=torch.int)
-        labels = torch.tensor(labels, dtype=torch.int)
+        user_input = torch.tensor(user_input, dtype=torch.int, device=DEVICE)
+        item_input = torch.tensor(item_input, dtype=torch.int, device=DEVICE)
+        labels = torch.tensor(labels, dtype=torch.int, device=DEVICE)
 
-        user_input, item_input, labels = user_input.to(DEVICE), item_input.to(DEVICE), labels.to(DEVICE)
+        # utilize dataloader to train in batches
+        dataset = torch.utils.data.TensorDataset(user_input, item_input, labels)
+        dataloader = torch.utils.data.DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=True)
+
+        server_model.to(DEVICE)
 
         optimizer = torch.optim.AdamW(server_model.parameters(), lr=LEARNING_RATE)
         for _ in range(LOCAL_EPOCHS):
-            logits, loss = server_model(user_input, item_input, labels)
-            optimizer.zero_grad(set_to_none=True)
-            loss.backward()
-            optimizer.step()
+            for _, (u, i, l) in enumerate(dataloader):
+                logits, loss = server_model(u, i, l)
+                optimizer.zero_grad(set_to_none=True)
+                loss.backward()
+
+                torch.nn.utils.clip_grad_norm_(server_model.parameters(), 0.5)
+                optimizer.step()
 
         return server_model.state_dict()
