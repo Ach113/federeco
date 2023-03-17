@@ -6,7 +6,7 @@ DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 TRAIN_DATA_PATH = 'data/ml-1m.train.rating'
 TEST_DATA_PATH = 'data/ml-1m.test.rating'
 NEGATIVE_DATA_PATH = 'data/ml-1m.test.negative'
-MODEL_SAVE_PATH = 'pretrained/ncf.h5'
+MODEL_SAVE_PATH = 'pretrained/ncf_torch.h5'
 
 
 NUM_USERS = 6040

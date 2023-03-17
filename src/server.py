@@ -1,3 +1,4 @@
+import os
 import time
 import copy
 import tqdm
@@ -19,12 +20,17 @@ def run_server(num_clients: int, num_rounds: int, save: bool):
     """
     # define server side model
     server_model = NCF(NUM_USERS, NUM_ITEMS)
-    # server_model.to(DEVICE)
-    # train
-    trained_model = training_process(server_model, num_clients, num_rounds)
 
-    if save:
-        torch.save(trained_model.state_dict(), 'pretrained/ncf_100_pytorch.h5')
+    # check if pretrained model already exists
+    if os.path.exists(MODEL_SAVE_PATH):
+        trained_weights = torch.load(MODEL_SAVE_PATH)
+    else:
+        # launch federated training process
+        trained_weights = training_process(server_model, num_clients, num_rounds)
+        if save:
+            torch.save(trained_weights, MODEL_SAVE_PATH)
+    # load server model's weights to generate recommendations
+    server_model.load_state_dict(trained_weights)
 
 
 def sample_clients(num_clients: int) -> List[Client]:
@@ -46,13 +52,13 @@ def sample_clients(num_clients: int) -> List[Client]:
 
 def training_process(server_model: torch.nn.Module,
                      num_clients: int,
-                     num_rounds: int) -> torch.nn.Module:
+                     num_rounds: int) -> collections.OrderedDict:
     """
     per single training round:
         1. samples `num_clients` clients
         2. trains each client locally `LOCAL_EPOCHS` number of times
         3. aggregates weights across `num_clients` clients and sets them to server model
-    returns trained keras model
+    returns weights of a trained model
     """
     test_data, negatives = load_test_file(), load_negative_file()
 
@@ -67,7 +73,7 @@ def training_process(server_model: torch.nn.Module,
     hr, ndcg = evaluate_model(server_model, users, items, negatives, k=10)
     print(f'hit rate: {hr:.2f}, normalized discounted cumulative gain: {ndcg:.2f} [{time.time() - t:.2f}]s')
 
-    return server_model
+    return server_model.state_dict()
 
 
 def single_train_round(server_model: torch.nn.Module,
@@ -98,4 +104,3 @@ def federated_averaging(client_weights: List[collections.OrderedDict]) -> collec
     for key in keys:
         averages[key] /= len(client_weights)
     return averages
-
