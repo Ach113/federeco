@@ -21,14 +21,13 @@ def run_server(num_clients: int, num_rounds: int, save: bool):
     # define server side model
     server_model = NCF(NUM_USERS, NUM_ITEMS)
 
-    # check if pretrained model already exists
-    if os.path.exists(MODEL_SAVE_PATH):
-        trained_weights = torch.load(MODEL_SAVE_PATH)
-    else:
-        # launch federated training process
-        trained_weights = training_process(server_model, num_clients, num_rounds)
-        if save:
-            torch.save(trained_weights, MODEL_SAVE_PATH)
+    # if pretrained model already exists, loads its weights
+    # if not, initiates the training process
+    trained_weights = torch.load(MODEL_SAVE_PATH) if os.path.exists(MODEL_SAVE_PATH) \
+        else training_process(server_model, num_clients, num_rounds)
+
+    if save:
+        torch.save(trained_weights, MODEL_SAVE_PATH)
     # load server model's weights to generate recommendations
     server_model.load_state_dict(trained_weights)
 
