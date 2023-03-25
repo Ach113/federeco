@@ -1,3 +1,4 @@
+import os
 import time
 import tqdm
 import tensorflow as tf
@@ -12,20 +13,24 @@ from model import collaborative_filtering_model
 from config import *
 
 
-def run_server(num_clients: int, num_rounds: int, save: bool):
+def run_server(num_clients: int, num_rounds: int, save: bool) -> tf.keras.Model:
     """
     defines server side ncf model and initiates the training process
     saves the trained model if appropriate parameter is set
     """
-    # define server side model
-    server_model = collaborative_filtering_model(NUM_USERS, NUM_ITEMS)
-    server_model.compile(optimizer=Adam(learning_rate=LEARNING_RATE, clipnorm=0.5), loss='binary_crossentropy')
-
-    # train
-    model = training_process(server_model, num_clients, num_rounds)
+    # check if saved model exists
+    if os.path.exists(MODEL_SAVE_PATH):
+        server_model = tf.keras.models.load_model(MODEL_SAVE_PATH)
+    else:
+        # if not, define the NCF model and initiate training process
+        server_model = collaborative_filtering_model(NUM_USERS, NUM_ITEMS)
+        server_model.compile(optimizer=Adam(learning_rate=LEARNING_RATE, clipnorm=0.5), loss='binary_crossentropy')
+        server_model = training_process(server_model, num_clients, num_rounds)
 
     if save:
-        model.save(MODEL_SAVE_PATH)
+        server_model.save(MODEL_SAVE_PATH)
+
+    return server_model
 
 
 def sample_clients(num_clients: int) -> List[Client]:
