@@ -1,7 +1,8 @@
 import os
 import time
 import copy
-import tqdm
+import torch.nn
+
 import collections
 from typing import List
 
@@ -13,13 +14,14 @@ from model import NeuralCollaborativeFiltering as NCF
 from config import *
 
 
-def run_server(num_clients: int, num_rounds: int, save: bool):
+def run_server(num_clients: int, num_rounds: int, save: bool) -> torch.nn.Module:
     """
     defines server side ncf model and initiates the training process
     saves the trained model if appropriate parameter is set
     """
     # define server side model
     server_model = NCF(NUM_USERS, NUM_ITEMS)
+    server_model.to(DEVICE)
 
     # if pretrained model already exists, loads its weights
     # if not, initiates the training process
@@ -30,6 +32,8 @@ def run_server(num_clients: int, num_rounds: int, save: bool):
         torch.save(trained_weights, MODEL_SAVE_PATH)
     # load server model's weights to generate recommendations
     server_model.load_state_dict(trained_weights)
+
+    return server_model
 
 
 def sample_clients(num_clients: int) -> List[Client]:
