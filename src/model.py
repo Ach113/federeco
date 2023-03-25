@@ -1,4 +1,3 @@
-import torch
 from torch import Tensor
 from typing import Optional, Tuple
 from torch.nn import functional as F

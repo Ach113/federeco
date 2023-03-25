@@ -1,4 +1,3 @@
-from client import Client
 from server import run_server, sample_clients
 
 

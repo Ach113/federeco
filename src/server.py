@@ -1,8 +1,8 @@
 import os
 import time
+import tqdm
 import copy
 import torch.nn
-
 import collections
 from typing import List
 
