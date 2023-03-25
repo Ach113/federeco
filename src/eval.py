@@ -6,6 +6,7 @@ from typing import Tuple, List
 
 from config import DEVICE
 
+
 # TODO!: Seems very slow, perhaps can be optimized
 
 
@@ -36,6 +37,7 @@ def evaluate_model(model: torch.nn.Module,
 
         with torch.no_grad():
             pred, _ = model(user_input, item_input)
+
         map_item_score = dict(zip(item_input, pred))
         rank_list = heapq.nlargest(k, map_item_score, key=map_item_score.get)
         hr, ndcg = get_metrics(rank_list, item)
