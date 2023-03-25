@@ -1,55 +1,56 @@
-from tensorflow.keras import Model
-from tensorflow.keras.regularizers import l2
-from tensorflow.keras.layers import Input, Embedding, Flatten, Multiply, Concatenate, Dense
-
+from torch import Tensor
+from typing import Optional, Tuple
+from torch.nn import functional as F
 
 from config import *
 
 
-def collaborative_filtering_model(num_users: int, num_items: int) -> Model:
-    params = MODEL_PARAMETERS['FedNCF']
+class NeuralCollaborativeFiltering(torch.nn.Module):
 
-    layers = params['layers']
-    reg_layers = params['reg_layers']
-    reg_mf = params['reg_mf']
-    mf_dim = params['mf_dim']
-    mlp_dim = int(layers[0] / 2)
+    def __init__(self, num_users: int, num_items: int):
+        super().__init__()
+        params = MODEL_PARAMETERS['FedNCF']
+        layers = params['layers']
+        mf_dim = params['mf_dim']
+        mlp_dim = int(layers[0] / 2)
 
-    num_layer = len(layers)
-    user_input = Input(shape=(1,), name='user_input')
-    item_input = Input(shape=(1,), name='item_input')
+        self.mf_embedding_user = torch.nn.Embedding(num_embeddings=num_users, embedding_dim=mf_dim, device=DEVICE)
+        self.mf_embedding_item = torch.nn.Embedding(num_embeddings=num_items, embedding_dim=mf_dim, device=DEVICE)
 
-    # matrix factorization embedding
-    mf_embedding_user = Embedding(input_dim=num_users, output_dim=mf_dim, name='mf_embedding_user', input_length=1,
-                                  embeddings_initializer='uniform', embeddings_regularizer=l2(reg_mf))
-    mf_embedding_item = Embedding(input_dim=num_items, output_dim=mf_dim, name='mf_embedding_item', input_length=1,
-                                  embeddings_initializer='uniform', embeddings_regularizer=l2(reg_mf))
+        self.mlp_embedding_user = torch.nn.Embedding(num_embeddings=num_users, embedding_dim=mlp_dim, device=DEVICE)
+        self.mlp_embedding_item = torch.nn.Embedding(num_embeddings=num_items, embedding_dim=mlp_dim, device=DEVICE)
 
-    # mlp embedding
-    mlp_embedding_user = Embedding(input_dim=num_users, output_dim=mlp_dim, name="mlp_embedding_user", input_length=1,
-                                   embeddings_initializer='uniform', embeddings_regularizer=l2(reg_layers[0]))
-    mlp_embedding_item = Embedding(input_dim=num_items, output_dim=mlp_dim, name='mlp_embedding_item', input_length=1,
-                                   embeddings_initializer='uniform', embeddings_regularizer=l2(reg_layers[0]))
+        self.mlp = torch.nn.ModuleList()
+        current_dim = 32
+        for idx in range(1, len(layers)):
+            self.mlp.append(torch.nn.Linear(current_dim, layers[idx]))
+            current_dim = layers[idx]
+            self.mlp.append(torch.nn.ReLU())
+        self.output_layer = torch.nn.Linear(in_features=24, out_features=1, device=DEVICE)
 
-    # MF part
-    mf_user_latent = Flatten()(mf_embedding_user(user_input))
-    mf_item_latent = Flatten()(mf_embedding_item(item_input))
-    mf_vector = Multiply()([mf_user_latent, mf_item_latent])
+    def forward(self, user_input: Tensor,
+                item_input: Tensor,
+                target: Optional[Tensor] = None) -> Tuple[Tensor, Optional[float]]:
+        # matrix factorization
+        mf_user_latent = torch.nn.Flatten()(self.mf_embedding_user(user_input))
+        mf_item_latent = torch.nn.Flatten()(self.mf_embedding_user(item_input))
+        mf_vector = torch.mul(mf_user_latent, mf_item_latent)
+        # mlp
+        mlp_user_latent = torch.nn.Flatten()(self.mf_embedding_user(user_input))
+        mlp_item_latent = torch.nn.Flatten()(self.mf_embedding_item(item_input))
+        mlp_vector = torch.cat([mlp_user_latent, mlp_item_latent], dim=1)
 
-    # MLP part
-    mlp_user_latent = Flatten()(mlp_embedding_user(user_input))
-    mlp_item_latent = Flatten()(mlp_embedding_item(item_input))
-    mlp_vector = Concatenate()([mlp_user_latent, mlp_item_latent])
-    for idx in range(1, num_layer):
-        layer = Dense(layers[idx], kernel_regularizer=l2(reg_layers[idx]), activation='relu', name="layer%d" % idx)
-        mlp_vector = layer(mlp_vector)
+        for layer in self.mlp:
+            mlp_vector = layer(mlp_vector)
 
-    # Concatenate MF and MLP parts
-    predict_vector = Concatenate()([mf_vector, mlp_vector])
+        predict_vector = torch.cat([mf_vector, mlp_vector], dim=1)
+        logits = self.output_layer(predict_vector)
 
-    # Final prediction layer
-    prediction = Dense(1, activation='sigmoid', kernel_initializer='lecun_uniform', name="prediction")(predict_vector)
+        loss = None
+        if target is not None:
+            target = target.view(target.shape[0], 1).to(torch.float32)
+            loss = F.binary_cross_entropy_with_logits(logits, target)
 
-    model = Model(inputs=[user_input, item_input], outputs=prediction)
+        logits = torch.nn.Sigmoid()(logits)
 
-    return model
+        return logits, loss

@@ -1,31 +1,39 @@
+import os
 import time
 import tqdm
-import tensorflow as tf
+import copy
+import torch.nn
+import collections
 from typing import List
-from tensorflow.keras.optimizers import Adam
 
 from dataset import *
 from client import Client
 from eval import evaluate_model
-from model import collaborative_filtering_model
+from model import NeuralCollaborativeFiltering as NCF
 
 from config import *
 
 
-def run_server(num_clients: int, num_rounds: int, save: bool):
+def run_server(num_clients: int, num_rounds: int, save: bool) -> torch.nn.Module:
     """
     defines server side ncf model and initiates the training process
     saves the trained model if appropriate parameter is set
     """
     # define server side model
-    server_model = collaborative_filtering_model(NUM_USERS, NUM_ITEMS)
-    server_model.compile(optimizer=Adam(learning_rate=LEARNING_RATE, clipnorm=0.5), loss='binary_crossentropy')
+    server_model = NCF(NUM_USERS, NUM_ITEMS)
+    server_model.to(DEVICE)
 
-    # train
-    model = training_process(server_model, num_clients, num_rounds)
+    # if pretrained model already exists, loads its weights
+    # if not, initiates the training process
+    trained_weights = torch.load(MODEL_SAVE_PATH) if os.path.exists(MODEL_SAVE_PATH) \
+        else training_process(server_model, num_clients, num_rounds)
 
     if save:
-        model.save(MODEL_SAVE_PATH)
+        torch.save(trained_weights, MODEL_SAVE_PATH)
+    # load server model's weights to generate recommendations
+    server_model.load_state_dict(trained_weights)
+
+    return server_model
 
 
 def sample_clients(num_clients: int) -> List[Client]:
@@ -45,15 +53,15 @@ def sample_clients(num_clients: int) -> List[Client]:
     return clients
 
 
-def training_process(server_model: tf.keras.models.Model,
+def training_process(server_model: torch.nn.Module,
                      num_clients: int,
-                     num_rounds: int) -> tf.keras.models.Model:
+                     num_rounds: int) -> collections.OrderedDict:
     """
     per single training round:
         1. samples `num_clients` clients
         2. trains each client locally `LOCAL_EPOCHS` number of times
         3. aggregates weights across `num_clients` clients and sets them to server model
-    returns trained keras model
+    returns weights of a trained model
     """
     test_data, negatives = load_test_file(), load_negative_file()
 
@@ -61,18 +69,18 @@ def training_process(server_model: tf.keras.models.Model,
         clients = sample_clients(num_clients)
         w = single_train_round(server_model, clients)
         updated_server_weights = federated_averaging(w)
-        server_model.set_weights(updated_server_weights)
+        server_model.load_state_dict(updated_server_weights)
 
     t = time.time()
     users, items = zip(*test_data)
-    hr, ndcg = evaluate_model(server_model, users, items, negatives, k=10, n_workers=12)
+    hr, ndcg = evaluate_model(server_model, users, items, negatives, k=10)
     print(f'hit rate: {hr:.2f}, normalized discounted cumulative gain: {ndcg:.2f} [{time.time() - t:.2f}]s')
 
-    return server_model
+    return server_model.state_dict()
 
 
-def single_train_round(server_model: tf.keras.models.Model,
-                       clients: List[Client]) -> List[np.ndarray]:
+def single_train_round(server_model: torch.nn.Module,
+                       clients: List[Client]) -> List[collections.OrderedDict]:
     """
     single round of federated training.
     Trains all clients locally on their respective datasets
@@ -85,9 +93,17 @@ def single_train_round(server_model: tf.keras.models.Model,
     return client_weights
 
 
-def federated_averaging(client_weights: List[np.ndarray]) -> np.ndarray:
+def federated_averaging(client_weights: List[collections.OrderedDict]) -> collections.OrderedDict:
     """
     calculates the average of client weights
     """
-    return np.sum(client_weights, axis=0) / len(client_weights)
+    keys = client_weights[0].keys()
+    averages = copy.deepcopy(client_weights[0])
 
+    for w in client_weights[1:]:
+        for key in keys:
+            averages[key] += w[key]
+
+    for key in keys:
+        averages[key] /= len(client_weights)
+    return averages

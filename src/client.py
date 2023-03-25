@@ -1,7 +1,7 @@
 import numpy as np
+import collections
 import pandas as pd
-import tensorflow as tf
-from typing import List
+from typing import List, Optional
 
 from config import *
 
@@ -19,13 +19,47 @@ class Client:
             'label': data_array[2]
         })
 
-    def train(self, server_model: tf.keras.models.Model) -> np.ndarray:
+    def train(self, server_model: torch.nn.Module) -> collections.OrderedDict:
         user_input, item_input = self.client_data['user_id'], self.client_data['item_id']
         labels = self.client_data['label']
 
-        server_model.fit([user_input, item_input], labels,
-                         batch_size=BATCH_SIZE, epochs=LOCAL_EPOCHS, verbose=0, shuffle=True)
+        user_input = torch.tensor(user_input, dtype=torch.int, device=DEVICE)
+        item_input = torch.tensor(item_input, dtype=torch.int, device=DEVICE)
+        labels = torch.tensor(labels, dtype=torch.int, device=DEVICE)
 
-        weights = np.array(server_model.get_weights(), dtype='object')
+        # utilize dataloader to train in batches
+        dataset = torch.utils.data.TensorDataset(user_input, item_input, labels)
+        dataloader = torch.utils.data.DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=True)
 
-        return weights
+        optimizer = torch.optim.AdamW(server_model.parameters(), lr=LEARNING_RATE)
+        for _ in range(LOCAL_EPOCHS):
+            for _, (u, i, l) in enumerate(dataloader):
+                logits, loss = server_model(u, i, l)
+                optimizer.zero_grad(set_to_none=True)
+                loss.backward()
+
+                torch.nn.utils.clip_grad_norm_(server_model.parameters(), 0.5)
+                optimizer.step()
+
+        return server_model.state_dict()
+
+    def generate_recommendation(self, server_model: torch.nn.Module, k: Optional[int] = 5) -> List[int]:
+        """
+        :param server_model: server model which will be used to generate predictions
+        :param k: number of recommendations to generate
+        :return: list of `k` movie recommendations
+        """
+        # get movies that user has not yet interacted with
+        movies = set(range(NUM_ITEMS)).difference(set(self.client_data['item_id'].tolist()))
+        movies = torch.tensor(list(movies), dtype=torch.int, device=DEVICE)
+        client_id = torch.tensor([self.client_id for _ in range(len(movies))], dtype=torch.int, device=DEVICE)
+        # obtain predictions in terms of logit per movie
+        with torch.no_grad():
+            logits, _ = server_model(client_id, movies)
+
+        rec_dict = {movie: p for movie, p in zip(movies.tolist(), logits.squeeze().tolist())}
+        # select top k recommendations
+        top_k = sorted(rec_dict.items(), key=lambda x: -x[1])[:k]
+        rec, _ = zip(*top_k)
+
+        return rec
