@@ -1,7 +1,7 @@
 TRAIN_DATA_PATH = 'data/ml-1m.train.rating'
 TEST_DATA_PATH = 'data/ml-1m.test.rating'
 NEGATIVE_DATA_PATH = 'data/ml-1m.test.negative'
-MODEL_SAVE_PATH = 'pretrained/ncf.h5'
+MODEL_SAVE_PATH = 'pretrained/ncf_400.h5'
 
 
 NUM_USERS = 6040

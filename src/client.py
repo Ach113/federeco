@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 import tensorflow as tf
-from typing import List
+from typing import List, Optional
 
 from config import *
 
@@ -29,3 +29,23 @@ class Client:
         weights = np.array(server_model.get_weights(), dtype='object')
 
         return weights
+
+    def generate_recommendation(self, server_model: tf.keras.Model, k: Optional[int] = 5) -> List[int]:
+        """
+        :param server_model: server model which will be used to generate predictions
+        :param k: number of recommendations to generate
+        :return: list of `k` movie recommendations
+        """
+        # get movies that user has not yet interacted with
+        movies = list(set(range(NUM_ITEMS)).difference(set(self.client_data['item_id'].tolist())))
+        movies = np.array(movies)
+        client_id = np.array([self.client_id for _ in range(len(movies))])
+        # obtain predictions in terms of logit per movie
+        logits = server_model.predict([client_id, movies])
+
+        rec_dict = {movie: p for movie, p in zip(movies, logits.squeeze().tolist())}
+        # select top k recommendations
+        top_k = sorted(rec_dict.items(), key=lambda x: -x[1])[:k]
+        rec, _ = zip(*top_k)
+
+        return rec
