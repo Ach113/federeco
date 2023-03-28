@@ -29,9 +29,9 @@ def load_client_train_data():
                 nega_item = np.random.randint(NUM_ITEMS)
                 while (usr, nega_item) in mat.keys():
                     nega_item = np.random.randint(NUM_ITEMS)
-            client_datas[usr][0].append(usr)
-            client_datas[usr][1].append(nega_item)
-            client_datas[usr][2].append(0)
+                client_datas[usr][0].append(usr)
+                client_datas[usr][1].append(nega_item)
+                client_datas[usr][2].append(0)
     return client_datas
 
 
