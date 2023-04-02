@@ -19,10 +19,14 @@ def parse_arguments():
 
 def main():
     args = parse_arguments()
+    # instantiate the dataset based on passed argument
     dataset = Dataset(args.dataset)
+    # run the server to load the existing model or train & save a new one
     trained_model = run_server(dataset, num_clients=20, num_rounds=400, path=args.path)
+    # pick random client & generate recommendations for them
     client = sample_clients(dataset, 1)[0]
     recommendations = client.generate_recommendation(server_model=trained_model, num_items=dataset.num_items, k=10)
+    print('Recommendations for user id: ', client.client_id)
     print(recommendations)
 
 
