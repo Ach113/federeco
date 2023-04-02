@@ -1,9 +1,9 @@
+from config import BATCH_SIZE, DEVICE, LEARNING_RATE, LOCAL_EPOCHS
+from typing import List, Optional
+import pandas as pd
 import numpy as np
 import collections
-import pandas as pd
-from typing import List, Optional
-
-from config import *
+import torch
 
 
 class Client:
@@ -43,14 +43,15 @@ class Client:
 
         return server_model.state_dict()
 
-    def generate_recommendation(self, server_model: torch.nn.Module, k: Optional[int] = 5) -> List[int]:
+    def generate_recommendation(self, server_model: torch.nn.Module, num_items: int,  k: Optional[int] = 5) -> List[int]:
         """
         :param server_model: server model which will be used to generate predictions
         :param k: number of recommendations to generate
+        :param num_items: total number of unique items in dataset
         :return: list of `k` movie recommendations
         """
         # get movies that user has not yet interacted with
-        movies = set(range(NUM_ITEMS)).difference(set(self.client_data['item_id'].tolist()))
+        movies = set(range(num_items)).difference(set(self.client_data['item_id'].tolist()))
         movies = torch.tensor(list(movies), dtype=torch.int, device=DEVICE)
         client_id = torch.tensor([self.client_id for _ in range(len(movies))], dtype=torch.int, device=DEVICE)
         # obtain predictions in terms of logit per movie
