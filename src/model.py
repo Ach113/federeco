@@ -1,8 +1,9 @@
-from torch import Tensor
-from typing import Optional, Tuple
 from torch.nn import functional as F
+from typing import Optional, Tuple
+from torch import Tensor
+import torch
 
-from config import *
+from config import MODEL_PARAMETERS, DEVICE
 
 
 class NeuralCollaborativeFiltering(torch.nn.Module):
