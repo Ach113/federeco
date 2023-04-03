@@ -43,7 +43,8 @@ class Client:
 
         return server_model.state_dict()
 
-    def generate_recommendation(self, server_model: torch.nn.Module, num_items: int,  k: Optional[int] = 5) -> List[int]:
+    def generate_recommendation(self, server_model: torch.nn.Module,
+                                num_items: int,  k: Optional[int] = 5) -> List[int]:
         """
         :param server_model: server model which will be used to generate predictions
         :param k: number of recommendations to generate

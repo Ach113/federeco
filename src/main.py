@@ -27,7 +27,10 @@ def main():
     client = sample_clients(dataset, 1)[0]
     recommendations = client.generate_recommendation(server_model=trained_model, num_items=dataset.num_items, k=10)
     print('Recommendations for user id: ', client.client_id)
-    print(recommendations)
+    if args.dataset == 'movielens':
+        print(dataset.get_movie_names(recommendations))
+    else:
+        print(recommendations)
 
 
 if __name__ == '__main__':
