@@ -4,7 +4,7 @@ import numpy as np
 import sys
 import os
 
-from config import NUM_NEGATIVES
+from federeco.config import NUM_NEGATIVES
 
 # TODO: convert to pandas
 

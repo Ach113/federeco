@@ -3,7 +3,7 @@ from typing import Optional, Tuple
 from torch import Tensor
 import torch
 
-from config import MODEL_PARAMETERS, DEVICE
+from federeco.config import MODEL_PARAMETERS, DEVICE
 
 
 class NeuralCollaborativeFiltering(torch.nn.Module):

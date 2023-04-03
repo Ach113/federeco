@@ -1,13 +1,12 @@
-import math
-import torch
-import heapq
-import numpy as np
 from typing import Tuple, List
+from federeco.config import DEVICE
+import numpy as np
+import heapq
+import torch
+import math
 
-from config import DEVICE
 
-
-# TODO!: Seems very slow, perhaps can be optimized
+# TODO: Seems very slow, perhaps can be optimized
 
 
 def get_metrics(rank_list: List, item: int) -> Tuple[int, float]:
@@ -29,8 +28,6 @@ def evaluate_model(model: torch.nn.Module,
     calculates hit rate and normalized discounted cumulative gain for each user across each item in `negatives`
     returns average of top-k list of hit rates and ndcgs
     """
-
-    # TODO: for some reason this function fails for pinterest dataset
 
     hits, ndcgs = list(), list()
     for i, user in enumerate(users):
