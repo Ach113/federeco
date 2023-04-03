@@ -17,8 +17,8 @@ class Dataset:
             self.num_items = 3706
         elif data == 'pinterest':
             s = 'pinterest-20'
-            self.num_users = 55187
-            self.num_items = 9915
+            self.num_users = 55188
+            self.num_items = 9916
 
         else:
             print(f'Error: unknown dataset {data}')
