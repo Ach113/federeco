@@ -48,8 +48,8 @@ def initialize_clients(dataset: Dataset) -> List[Client]:
     """
     clients = list()
     client_dataset = dataset.load_client_train_data()
-    client_ids = [x[0][0] for x in client_dataset]
-    for client_id in set(client_ids):
+
+    for client_id in range(dataset.num_users):
         c = Client(client_id)
         c.set_client_data(client_dataset[client_id])
         clients.append(c)
