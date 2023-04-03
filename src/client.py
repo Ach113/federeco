@@ -1,4 +1,4 @@
-from config import BATCH_SIZE, DEVICE, LEARNING_RATE, LOCAL_EPOCHS
+from federeco.config import BATCH_SIZE, DEVICE, LEARNING_RATE, LOCAL_EPOCHS
 from typing import List, Optional
 import pandas as pd
 import numpy as np
