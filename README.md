@@ -30,7 +30,7 @@ Parameters, along with file paths and other configurations are provided in `conf
 2. add other types of models beside NCF
 
 # References
-[1] X. He, L. Liao, H. Zhang, L. Nie, X. Hu, and T.-S. Chua, “Neural Collaborative
+[[1]](https://arxiv.org/pdf/1708.05031.pdf) X. He, L. Liao, H. Zhang, L. Nie, X. Hu, and T.-S. Chua, “Neural Collaborative
 Filtering,” Proceedings of the 26th International Conference on World Wide Web -
-WWW ’17, 2017, doi: 10.1145/3038912.3052569. Available: https://arxiv.org/pdf/1708.05031.pdf \
-[2] V. Perifanis and P. S. Efraimidis, “Federated Neural Collaborative Filtering,” Knowledge-Based Systems, vol. 242, p. 108441, Apr. 2022
+WWW ’17, 2017, doi: 10.1145/3038912.3052569 \
+[[2]](https://arxiv.org/pdf/2106.04405.pdf) V. Perifanis and P. S. Efraimidis, “Federated Neural Collaborative Filtering,” Knowledge-Based Systems, vol. 242, p. 108441, Apr. 2022
