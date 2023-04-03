@@ -1,4 +1,4 @@
-from typing import List, Any
+from typing import List, Any, Tuple
 import collections
 import numpy as np
 import torch
@@ -16,44 +16,55 @@ def sample_clients(clients: List, num_clients: int) -> List:
     return np.random.choice(clients, size=num_clients, replace=False).tolist()
 
 
-def training_process(clients: List,
-                     server_model: torch.nn.Module,
+def training_process(server_model: torch.nn.Module,
+                     all_clients: List,
                      num_clients: int,
-                     num_rounds: int) -> dict[str, Any]:
+                     epochs: int) -> dict[str, Any]:
     """
-    :param clients: list of all clients in the system
     :param server_model: server model which is used for training
+    :param all_clients: list of all clients in the system
     :param num_clients: number of clients to sample during single training iteration
-    :param num_rounds: total number of training rounds
+    :param epochs: total number of training rounds
+    :return: weights of a trained model
 
     per single training round:
         1. samples `num_clients` clients
         2. trains each client locally `LOCAL_EPOCHS` number of times
         3. aggregates weights across `num_clients` clients and sets them to server model
-    returns weights of a trained model
     """
 
-    for _ in tqdm.tqdm(range(num_rounds)):
-        clients = sample_clients(clients, num_clients)
-        w = single_train_round(server_model, clients)
+    pbar = tqdm.tqdm(range(epochs))
+    for epoch in pbar:
+        # sample `num_clients` clients for training
+        clients = sample_clients(all_clients, num_clients)
+        # apply single round of training
+        w, loss = single_train_round(server_model, clients)
+        # aggregate weights
         updated_server_weights = federated_averaging(w)
+        # set aggregated weights to server model
         server_model.load_state_dict(updated_server_weights)
+        # display progress bar with epochs & mean loss of single training round
+        pbar.set_description(f'epoch: {epoch+1}, loss: {loss:.2f}')
 
     return server_model.state_dict()
 
 
 def single_train_round(server_model: torch.nn.Module,
-                       clients: List) -> List[collections.OrderedDict]:
+                       clients: List) -> Tuple[List, float]:
     """
-    single round of federated training.
-    Trains all clients locally on their respective datasets
-    Returns weights of client models as a list
+    :param server_model: server model to train
+    :param clients: list of `Client` objects, `Client` must implement `train()` method
+    :return: weights of each client models as a list
+
+    single round of federated training, trains all clients in `clients` locally
     """
     client_weights = list()
+    mean_loss = 0
     for client in clients:
-        weights = client.train(server_model)
+        weights, loss = client.train(server_model)
+        mean_loss += float(loss.cpu().detach().numpy())
         client_weights.append(weights)
-    return client_weights
+    return client_weights, mean_loss / len(client_weights)
 
 
 def federated_averaging(client_weights: List[collections.OrderedDict]) -> collections.OrderedDict:

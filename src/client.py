@@ -1,8 +1,8 @@
 from federeco.config import BATCH_SIZE, DEVICE, LEARNING_RATE, LOCAL_EPOCHS
-from typing import List, Optional
+from typing import List, Optional, Any, Tuple
+from torch import Tensor
 import pandas as pd
 import numpy as np
-import collections
 import torch
 
 
@@ -19,7 +19,7 @@ class Client:
             'label': data_array[2]
         })
 
-    def train(self, server_model: torch.nn.Module) -> collections.OrderedDict:
+    def train(self, server_model: torch.nn.Module) -> Tuple[dict[str, Any], Tensor]:
         user_input, item_input = self.client_data['user_id'], self.client_data['item_id']
         labels = self.client_data['label']
 
@@ -32,6 +32,7 @@ class Client:
         dataloader = torch.utils.data.DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=True)
 
         optimizer = torch.optim.AdamW(server_model.parameters(), lr=LEARNING_RATE)
+        loss = None
         for _ in range(LOCAL_EPOCHS):
             for _, (u, i, l) in enumerate(dataloader):
                 logits, loss = server_model(u, i, l)
@@ -41,7 +42,7 @@ class Client:
                 torch.nn.utils.clip_grad_norm_(server_model.parameters(), 0.5)
                 optimizer.step()
 
-        return server_model.state_dict()
+        return server_model.state_dict(), loss
 
     def generate_recommendation(self, server_model: torch.nn.Module,
                                 num_items: int,  k: Optional[int] = 5) -> List[int]:
