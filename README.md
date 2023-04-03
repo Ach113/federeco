@@ -34,12 +34,12 @@ class Client:
     def train(self):
         """ method that trains client locally """
 
-model = NCF(num_users, num_items)
+ncf = NCF(num_users, num_items)
 clients =  # list of Client objects #
 
 # launch training process
-state_dict = training_process(
-    model,  # server-side model
+model = training_process(
+    ncf,  # server-side model to train
     clients,  # list of all clients in the system
     num_clients,  # number of clients to sample per epoch
     epochs  # number of training epochs
