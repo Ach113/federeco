@@ -85,8 +85,9 @@ class Dataset:
         movie_names = list()
         with open('data/movies.dat', 'r') as f:
             lines = f.readlines()
+
         for line in lines:
-            movie_id, movie_name, _ = line.split('::')
+            _, movie_name, _ = line.split('::')
             movie_names.append(movie_name)
 
         return [movie_names[i] for i in movie_ids]
