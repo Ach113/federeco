@@ -1,5 +1,5 @@
 # federeco
-Neural collaborative filtering recommendation system utilizing federated averaging for data privacy.
+Federated recommendation system based on neural collaborative filtering [1].
 Implementation is done using both Tensorflow/Keras and PyTorch frameworks. 
 Main branch includes Pytorch implementation, with Tensorflow implementation on `tensorflow` branch.
 ### Requirements
@@ -36,6 +36,7 @@ class Client:
 
 model = NCF(num_users, num_items)
 clients =  # list of Client objects #
+
 # launch training process
 state_dict = training_process(
     model,  # server-side model
@@ -43,6 +44,24 @@ state_dict = training_process(
     num_clients,  # number of clients to sample per epoch
     epochs  # number of training epochs
 ) 
+
+# evaluate the model
+hr, ndcg = evaluate_model(model, users, items, negatives, k=10)
+```
+### Running the simulator
+```
+usage: federeco [-h] [-d dataset] [-p path] [-e epochs]
+
+federated recommendation system
+
+options:
+  -h, --help             show this help message and exit
+  -d dataset, --dataset  which dataset to use, default "movielens"
+  -p path, --path        path where trained model is stored, default "pretrained/ncf.h5"
+  -e epochs, --epochs    number of training epochs, default 400
+```
+```
+python src/main.py -d movielens -p pretrained/ncf_movielens.h5 -e 1000
 ```
     
 ### Dataset
@@ -52,7 +71,7 @@ Processed versions of the datasets are provided in `data` folder.
 
 ### Parameters
 Training parameters, such as learning rate, number of global & local epochs, number of negative samples are all taken from 
-[Federated Neural Collaborative Filtering paper](https://arxiv.org/abs/2106.04405). \
+Federated Neural Collaborative Filtering paper [2]. \
 __Note:__ this repository is not an implementation of the paper linked above, we simply use it \
 as a baseline for setting hyperparameters of our model.
 
