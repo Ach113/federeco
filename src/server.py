@@ -19,7 +19,7 @@ def run_server(dataset: Dataset, num_clients: int, num_rounds: int, path: str) -
     saves the trained model at indicated path
     """
     # define server side model
-    server_model = NCF(dataset.num_users, dataset.num_items)
+    server_model = NCF(dataset.num_users+1, dataset.num_items+1)
     server_model.to(DEVICE)
 
     # if pretrained model already exists, loads its weights
