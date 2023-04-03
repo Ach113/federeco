@@ -29,13 +29,16 @@ def evaluate_model(model: torch.nn.Module,
     calculates hit rate and normalized discounted cumulative gain for each user across each item in `negatives`
     returns average of top-k list of hit rates and ndcgs
     """
+
+    # TODO: for some reason this function fails for pinterest dataset
+
     hits, ndcgs = list(), list()
     for i, user in enumerate(users):
         item = items[i]
-        item_input = torch.tensor(np.array(negatives[i] + [item]), dtype=torch.int, device=DEVICE)
-        user_input = torch.tensor(np.full(len(item_input), user, dtype='int32'), dtype=torch.int, device=DEVICE)
 
         with torch.no_grad():
+            item_input = torch.tensor(np.array(negatives[i] + [item]), dtype=torch.int, device=DEVICE)
+            user_input = torch.tensor(np.full(len(item_input), user, dtype='int32'), dtype=torch.int, device=DEVICE)
             pred, _ = model(user_input, item_input)
 
         map_item_score = dict(zip(item_input, pred))
