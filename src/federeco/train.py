@@ -1,4 +1,5 @@
 from typing import List, Any, Tuple
+from federeco.client import Client
 import collections
 import numpy as np
 import torch
@@ -6,7 +7,7 @@ import copy
 import tqdm
 
 
-def sample_clients(clients: List, num_clients: int) -> List:
+def sample_clients(clients: List[Client], num_clients: int) -> List[Client]:
     """
     :param clients: list of all available clients
     :param num_clients: number of clients to sample
@@ -17,7 +18,7 @@ def sample_clients(clients: List, num_clients: int) -> List:
 
 
 def training_process(server_model: torch.nn.Module,
-                     all_clients: List,
+                     all_clients: List[Client],
                      num_clients: int,
                      epochs: int) -> dict[str, Any]:
     """
@@ -50,7 +51,7 @@ def training_process(server_model: torch.nn.Module,
 
 
 def single_train_round(server_model: torch.nn.Module,
-                       clients: List) -> Tuple[List, float]:
+                       clients: List[Client]) -> Tuple[List[collections.OrderedDict], float]:
     """
     :param server_model: server model to train
     :param clients: list of `Client` objects, `Client` must implement `train()` method

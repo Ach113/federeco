@@ -3,10 +3,11 @@ from typing import List, Optional, Any, Tuple
 from torch import Tensor
 import pandas as pd
 import numpy as np
+import federeco
 import torch
 
 
-class Client:
+class Client(federeco.client.Client):
 
     def __init__(self, client_id: int):
         self.client_id = client_id
@@ -20,6 +21,11 @@ class Client:
         })
 
     def train(self, server_model: torch.nn.Module) -> Tuple[dict[str, Any], Tensor]:
+        """
+        single round of local training for client
+        :param server_model: pytorch model that can be trained on user data
+        :return: weights of the server model, training loss
+        """
         user_input, item_input = self.client_data['user_id'], self.client_data['item_id']
         labels = self.client_data['label']
 
