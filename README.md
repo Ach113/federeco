@@ -25,15 +25,22 @@ All the other files are drivers to instantiate clients and run the training proc
 from federeco.models import NeuralCollaborativeFiltering as NCF
 from federeco.train import training_process
 from federeco.eval import evaluate_model
+from federeco.client import Client as C
+
 
 # define client class
-class Client:
+class Client(C):
     def __init__(self, client_id):
-        """  client constructor  """
+        super().__init__(client_id)
+        self.client_id = client_id
     
-    def train(self):
+    def train(self, server_model):
         """ method that trains client locally """
+        
+    def generate_recommendation(self, server_model, num_items, k):
+        """ method that generates recommendation """
 
+        
 ncf = NCF(num_users, num_items)
 clients =  # list of Client objects #
 

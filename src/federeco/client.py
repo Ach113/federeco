@@ -30,8 +30,8 @@ class Client(ABC):
                                 num_items: int,  k: Optional[int] = 5) -> List[int]:
         """
         :param server_model: server model which will be used to generate predictions
-        :param k: number of recommendations to generate
         :param num_items: total number of unique items in dataset
+        :param k: number of recommendations to generate
         :return: list of `k` movie recommendations
         """
         pass
