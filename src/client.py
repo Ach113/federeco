@@ -13,6 +13,7 @@ class Client(federeco.client.Client):
         super().__init__(client_id)
         self.client_id = client_id
         self.client_data = None
+        self.access_counter = 0
 
     def set_client_data(self, data_array: List[np.ndarray]):
         self.client_data = pd.DataFrame({

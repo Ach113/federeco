@@ -23,14 +23,24 @@ def get_metrics(rank_list: List, item: int) -> Tuple[int, float]:
 
 def evaluate_model(model: torch.nn.Module,
                    users: List[int], items: List[int], negatives: List[List[int]],
-                   k: int) -> Tuple[float, float]:
+                   k: int,
+                   access_counters: List[int]) -> Tuple[float, float]:
     """
     calculates hit rate and normalized discounted cumulative gain for each user across each item in `negatives`
     returns average of top-k list of hit rates and ndcgs
     """
 
+    # access_counters = np.array(access_counters)
+    # blacklist = set(np.where(access_counters == 0)[0].tolist())
+    #
+    # print(f'clients with 0 access: {int(100 * len(blacklist)/len(access_counters))}%')
+
     hits, ndcgs = list(), list()
     for i, user in enumerate(users):
+
+        # if user in blacklist:
+        #     continue
+
         item = items[i]
 
         with torch.no_grad():

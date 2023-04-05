@@ -36,7 +36,7 @@ def run_server(dataset: Dataset, num_clients: int, epochs: int, path: str, save:
     test_data, negatives = dataset.load_test_file(), dataset.load_negative_file()
     t = time.time()
     users, items = zip(*test_data)
-    hr, ndcg = evaluate_model(server_model, users, items, negatives, k=10)
+    hr, ndcg = evaluate_model(server_model, users, items, negatives, k=10, access_counters=[c.access_counter for c in clients])
     print(f'hit rate: {hr:.2f}, normalized discounted cumulative gain: {ndcg:.2f} [{time.time() - t:.2f}]s')
 
     return server_model
