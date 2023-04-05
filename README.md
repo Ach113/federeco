@@ -66,10 +66,11 @@ options:
   -d dataset, --dataset  which dataset to use, default "movielens"
   -p path, --path        path where trained model is stored, default "pretrained/ncf.h5"
   -e epochs, --epochs    number of training epochs, default 400
+  -s, --save, --no-save  flag that indicates if trained model should be saved
+                         (default: True)
 ```
-```
-python src/main.py -d movielens -p pretrained/ncf_movielens.h5 -e 1000
-```
+
+`python src/main.py -d movielens -p pretrained/ncf_movielens.h5 -e 1000`
     
 ### Dataset
 For model training and validation we use [MovieLens 1M](https://grouplens.org/datasets/movielens/1m/)
