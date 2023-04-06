@@ -18,7 +18,7 @@ def parse_arguments():
     parser.add_argument('-e', '--epochs', default=400, metavar='epochs', type=int,
                         help='number of training epochs, default 400')
     parser.add_argument('-s', '--save', default=True, metavar='save', action=argparse.BooleanOptionalAction,
-                        help='flag that indicates if trained model should be saved, default True')
+                        help='flag that indicates if trained model should be saved')
     return parser.parse_args()
 
 
@@ -27,12 +27,12 @@ def main():
     # instantiate the dataset based on passed argument
     dataset = Dataset(args.dataset)
     # run the server to load the existing model or train & save a new one
-    trained_model = run_server(dataset, num_clients=20, epochs=args.epochs, path=args.path, save=args.save)
+    trained_model = run_server(dataset, num_clients=50, epochs=args.epochs, path=args.path, save=args.save)
     # pick random client & generate recommendations for them
     clients = initialize_clients(dataset)
-    client = sample_clients(clients, 1)[0]
-    recommendations = client.generate_recommendation(server_model=trained_model, num_items=dataset.num_items, k=5)
-    print('Recommendations for user id:', client.client_id)
+    client, _ = sample_clients(clients, 1)
+    recommendations = client[0].generate_recommendation(server_model=trained_model, num_items=dataset.num_items, k=5)
+    print('Recommendations for user id:', client[0].client_id)
     if args.dataset == 'movielens':
         print(dataset.get_movie_names(recommendations))
     else:

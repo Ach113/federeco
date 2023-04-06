@@ -19,12 +19,13 @@ def run_server(dataset: Dataset, num_clients: int, epochs: int, path: str, save:
     server_model = NCF(dataset.num_users, dataset.num_items)
     server_model.to(DEVICE)
 
+    clients = initialize_clients(dataset)
+
     # if pretrained model already exists, loads its weights
     # if not, initiates the training process
     if os.path.exists(path):
         trained_weights = torch.load(path)
     else:
-        clients = initialize_clients(dataset)
         trained_weights = training_process(server_model, clients, num_clients, epochs)
 
     if save:
@@ -36,7 +37,7 @@ def run_server(dataset: Dataset, num_clients: int, epochs: int, path: str, save:
     test_data, negatives = dataset.load_test_file(), dataset.load_negative_file()
     t = time.time()
     users, items = zip(*test_data)
-    hr, ndcg = evaluate_model(server_model, users, items, negatives, k=10)
+    hr, ndcg = evaluate_model(server_model, users, items, negatives, k=10, access_counters=[c.access_counter for c in clients])
     print(f'hit rate: {hr:.2f}, normalized discounted cumulative gain: {ndcg:.2f} [{time.time() - t:.2f}]s')
 
     return server_model
