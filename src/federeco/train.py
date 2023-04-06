@@ -1,20 +1,29 @@
+from federeco.models import NeuralCollaborativeFiltering as NCF
 from typing import List, Any, Tuple
 from federeco.client import Client
+from federeco.config import DEVICE
 import collections
-import numpy as np
+import random
 import torch
 import copy
 import tqdm
 
 
-def sample_clients(clients: List[Client], num_clients: int) -> List[Client]:
+def sample_clients(clients: List[Client], num_clients: int) -> Tuple[List[Client], List[Client]]:
     """
     :param clients: list of all available clients
     :param num_clients: number of clients to sample
 
     sample `num_clients` clients and return along with their respective data
     """
-    return np.random.choice(clients, size=num_clients, replace=False).tolist()
+    def rotate(array: List, n: int) -> List:
+        return array[n:] + array[:n]
+
+    sample = clients[:num_clients]
+    # send the already sampled clients to the back of the queue
+    clients = rotate(clients, num_clients)
+
+    return sample, clients
 
 
 def training_process(server_model: torch.nn.Module,
@@ -34,10 +43,12 @@ def training_process(server_model: torch.nn.Module,
         3. aggregates weights across `num_clients` clients and sets them to server model
     """
 
+    random.shuffle(all_clients)
+
     pbar = tqdm.tqdm(range(epochs))
     for epoch in pbar:
         # sample `num_clients` clients for training
-        clients = sample_clients(all_clients, num_clients)
+        clients, all_clients = sample_clients(all_clients, num_clients)
         # apply single round of training
         w, loss = single_train_round(server_model, clients)
         # aggregate weights
@@ -63,7 +74,8 @@ def single_train_round(server_model: torch.nn.Module,
     mean_loss = 0
     for client in clients:
         client.access_counter += 1
-        weights, loss = client.train(server_model)
+        server_model_copy = copy.deepcopy(server_model)
+        weights, loss = client.train(server_model_copy)
         mean_loss += float(loss.cpu().detach().numpy())
         client_weights.append(weights)
     return client_weights, mean_loss / len(client_weights)
