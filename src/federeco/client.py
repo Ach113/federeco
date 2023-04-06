@@ -6,7 +6,7 @@ import torch
 
 """
 abstract Client class which is used by `federeco.train.single_training_round()` to train clients locally
-`federeco` models must be trained by data wrapped by `Client` objects
+`federeco` models must be trained with data wrapped by `Client` objects
 """
 
 

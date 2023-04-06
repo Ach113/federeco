@@ -1,7 +1,5 @@
-from federeco.models import NeuralCollaborativeFiltering as NCF
 from typing import List, Any, Tuple
 from federeco.client import Client
-from federeco.config import DEVICE
 import collections
 import random
 import torch
@@ -73,7 +71,6 @@ def single_train_round(server_model: torch.nn.Module,
     client_weights = list()
     mean_loss = 0
     for client in clients:
-        client.access_counter += 1
         server_model_copy = copy.deepcopy(server_model)
         weights, loss = client.train(server_model_copy)
         mean_loss += float(loss.cpu().detach().numpy())
