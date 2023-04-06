@@ -19,12 +19,13 @@ def run_server(dataset: Dataset, num_clients: int, epochs: int, path: str, save:
     server_model = NCF(dataset.num_users, dataset.num_items)
     server_model.to(DEVICE)
 
+    clients = initialize_clients(dataset)
+
     # if pretrained model already exists, loads its weights
     # if not, initiates the training process
     if os.path.exists(path):
         trained_weights = torch.load(path)
     else:
-        clients = initialize_clients(dataset)
         trained_weights = training_process(server_model, clients, num_clients, epochs)
 
     if save:
