@@ -1,10 +1,11 @@
 from typing import List, Any, Tuple
-from federeco.client import Client
 import collections
 import random
 import torch
 import copy
 import tqdm
+
+from federeco.client import Client
 
 
 def sample_clients(clients: List[Client], num_clients: int) -> Tuple[List[Client], List[Client]]:
@@ -14,12 +15,9 @@ def sample_clients(clients: List[Client], num_clients: int) -> Tuple[List[Client
 
     sample `num_clients` clients and return along with their respective data
     """
-    def rotate(array: List, n: int) -> List:
-        return array[n:] + array[:n]
-
     sample = clients[:num_clients]
-    # send the already sampled clients to the back of the queue
-    clients = rotate(clients, num_clients)
+    # rotate the list by `num_clients`
+    clients = clients[num_clients:] + clients[:num_clients]
 
     return sample, clients
 

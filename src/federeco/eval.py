@@ -1,12 +1,10 @@
 from typing import Tuple, List
-from federeco.config import DEVICE
 import numpy as np
 import heapq
 import torch
 import math
 
-
-# TODO: Seems very slow, perhaps can be optimized
+from federeco.config import DEVICE
 
 
 def get_metrics(rank_list: List, item: int) -> Tuple[int, float]:

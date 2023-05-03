@@ -12,6 +12,7 @@ from federeco.config import NUM_NEGATIVES
 class Dataset:
 
     def __init__(self, data: str):
+
         if data == 'movielens':
             s = 'ml-1m'
             self.num_users = 6040
@@ -20,7 +21,6 @@ class Dataset:
             s = 'pinterest-20'
             self.num_users = 55187
             self.num_items = 9916
-
         else:
             print(f'Error: unknown dataset {data}')
             sys.exit(-1)
