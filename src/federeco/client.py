@@ -13,8 +13,9 @@ abstract Client class which is used by `federeco.train.single_training_round()` 
 class Client(ABC):
 
     @abstractmethod
-    def __init__(self, client_id: int):
+    def __init__(self, client_id: int, local_epochs: int):
         self.client_id = client_id
+        self.local_epochs = local_epochs
 
     @abstractmethod
     def train(self, server_model: torch.nn.Module) -> Tuple[dict[str, Any], Tensor]:

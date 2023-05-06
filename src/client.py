@@ -9,9 +9,10 @@ import torch
 
 class Client(federeco.client.Client):
 
-    def __init__(self, client_id: int):
-        super().__init__(client_id)
+    def __init__(self, client_id: int, local_epochs: int):
+        super().__init__(client_id, local_epochs)
         self.client_id = client_id
+        self.local_epochs = local_epochs
         self.client_data = None
 
     def set_client_data(self, data_array: List[np.ndarray]):
@@ -40,7 +41,7 @@ class Client(federeco.client.Client):
 
         optimizer = torch.optim.AdamW(server_model.parameters(), lr=LEARNING_RATE)
         loss = None
-        for _ in range(LOCAL_EPOCHS):
+        for _ in range(self.local_epochs):
             for _, (u, i, l) in enumerate(dataloader):
                 logits, loss = server_model(u, i, l)
                 optimizer.zero_grad(set_to_none=True)

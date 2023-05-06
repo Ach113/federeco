@@ -5,7 +5,11 @@ import torch
 import copy
 import tqdm
 
+from federeco.dataset import Dataset
 from federeco.client import Client
+from federeco.eval import evaluate_model
+
+import pickle
 
 
 def sample_clients(clients: List[Client], num_clients: int) -> Tuple[List[Client], List[Client]]:
@@ -25,7 +29,8 @@ def sample_clients(clients: List[Client], num_clients: int) -> Tuple[List[Client
 def training_process(server_model: torch.nn.Module,
                      all_clients: List[Client],
                      num_clients: int,
-                     epochs: int) -> dict[str, Any]:
+                     epochs: int,
+                     dataset: Dataset) -> dict[str, Any]:
     """
     :param server_model: server model which is used for training
     :param all_clients: list of all clients in the system
@@ -41,6 +46,9 @@ def training_process(server_model: torch.nn.Module,
 
     random.shuffle(all_clients)
 
+    test_data, negatives = dataset.load_test_file(), dataset.load_negative_file()
+    users, items = zip(*test_data)
+
     pbar = tqdm.tqdm(range(epochs))
     for epoch in pbar:
         # sample `num_clients` clients for training
@@ -53,6 +61,9 @@ def training_process(server_model: torch.nn.Module,
         server_model.load_state_dict(updated_server_weights)
         # display progress bar with epochs & mean loss of single training round
         pbar.set_description(f'epoch: {epoch+1}, loss: {loss:.2f}')
+        if epoch % 5 == 0:
+            hr, ndcg = evaluate_model(server_model, users, items, negatives, k=10)
+            print(f'{hr:.2f} {ndcg:.2f}')
 
     return server_model.state_dict()
 

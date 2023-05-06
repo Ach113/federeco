@@ -13,12 +13,16 @@ def parse_arguments():
     parser.add_argument('-d', '--dataset', default='movielens', metavar='dataset',
                         choices=['movielens', 'pinterest'],
                         help='which dataset to use, default "movielens"')
-    parser.add_argument('-p', '--path', default='pretrained/ncf.h5', metavar='path',
+    parser.add_argument('-p', '--path', default='pretrained/fedncf.h5', metavar='path',
                         help='path where trained model is stored, default "pretrained/ncf.h5"')
     parser.add_argument('-e', '--epochs', default=400, metavar='epochs', type=int,
                         help='number of training epochs, default 400')
     parser.add_argument('-s', '--save', default=True, metavar='save', action=argparse.BooleanOptionalAction,
                         help='flag that indicates if trained model should be saved')
+    parser.add_argument('-n', default=50, metavar='n', type=int,
+                        help='number of clients to sample per epoch')
+    parser.add_argument('-l', default=2, type=int, metavar='l',
+                        help='number of local training epochs per client')
     return parser.parse_args()
 
 
@@ -27,16 +31,17 @@ def main():
     # instantiate the dataset based on passed argument
     dataset = Dataset(args.dataset)
     # run the server to load the existing model or train & save a new one
-    trained_model = run_server(dataset, num_clients=50, epochs=args.epochs, path=args.path, save=args.save)
+    trained_model = run_server(dataset, num_clients=args.n, epochs=args.epochs,
+                               path=args.path, save=args.save, local_epochs=args.l)
     # pick random client & generate recommendations for them
-    clients = initialize_clients(dataset)
-    client, _ = sample_clients(clients, 1)
-    recommendations = client[0].generate_recommendation(server_model=trained_model, num_items=dataset.num_items, k=5)
-    print('Recommendations for user id:', client[0].client_id)
-    if args.dataset == 'movielens':
-        print(dataset.get_movie_names(recommendations))
-    else:
-        print(recommendations)
+    # clients = initialize_clients(dataset)
+    # client, _ = sample_clients(clients, 1)
+    # recommendations = client[0].generate_recommendation(server_model=trained_model, num_items=dataset.num_items, k=5)
+    # print('Recommendations for user id:', client[0].client_id)
+    # if args.dataset == 'movielens':
+    #     print(dataset.get_movie_names(recommendations))
+    # else:
+    #     print(recommendations)
 
 
 if __name__ == '__main__':
