@@ -19,6 +19,10 @@ def parse_arguments():
                         help='number of training epochs, default 400')
     parser.add_argument('-s', '--save', default=True, metavar='save', action=argparse.BooleanOptionalAction,
                         help='flag that indicates if trained model should be saved')
+    parser.add_argument('-n', default=True, metavar='sample_size', type=int,
+                        help='number of clients to sample per epoch')
+    parser.add_argument('-l', default=True, metavar='local_epochs', type=int,
+                        help='number of local training epochs')
     return parser.parse_args()
 
 
@@ -27,7 +31,8 @@ def main():
     # instantiate the dataset based on passed argument
     dataset = Dataset(args.dataset)
     # run the server to load the existing model or train & save a new one
-    trained_model = run_server(dataset, num_clients=50, epochs=args.epochs, path=args.path, save=args.save)
+    trained_model = run_server(dataset, num_clients=args.n, epochs=args.epochs,
+                               path=args.path, save=args.save, local_epochs=args.l)
     # pick random client & generate recommendations for them
     clients = initialize_clients(dataset)
     client, _ = sample_clients(clients, 1)

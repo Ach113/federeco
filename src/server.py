@@ -10,7 +10,12 @@ import time
 import os
 
 
-def run_server(dataset: Dataset, num_clients: int, epochs: int, path: str, save: bool) -> torch.nn.Module:
+def run_server(dataset: Dataset,
+               num_clients: int,
+               epochs: int,
+               path: str,
+               save: bool,
+               local_epochs: int) -> torch.nn.Module:
     """
     defines server side ncf model and initiates the training process
     saves the trained model at indicated path
@@ -26,7 +31,7 @@ def run_server(dataset: Dataset, num_clients: int, epochs: int, path: str, save:
     if os.path.exists(path):
         trained_weights = torch.load(path)
     else:
-        trained_weights = training_process(server_model, clients, num_clients, epochs)
+        trained_weights = training_process(server_model, clients, num_clients, epochs, local_epochs)
 
     if save:
         torch.save(trained_weights, path)
