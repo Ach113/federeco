@@ -48,6 +48,7 @@ def training_process(server_model: torch.nn.Module,
 
     test_data, negatives = dataset.load_test_file(), dataset.load_negative_file()
     users, items = zip(*test_data)
+    hrs, ndcgs = list(), list()
 
     pbar = tqdm.tqdm(range(epochs))
     for epoch in pbar:
@@ -63,7 +64,14 @@ def training_process(server_model: torch.nn.Module,
         pbar.set_description(f'epoch: {epoch+1}, loss: {loss:.2f}')
         if epoch % 5 == 0:
             hr, ndcg = evaluate_model(server_model, users, items, negatives, k=10)
-            print(f'{hr:.2f} {ndcg:.2f}')
+            hrs.append(hr)
+            ndcgs.append(ndcg)
+
+    with open('hr_dump.pkl', 'wb') as f:
+        pickle.dump(hrs, f)
+
+    with open('ndcg_dump.pkl', 'wb') as f:
+        pickle.dump(ndcgs, f)
 
     return server_model.state_dict()
 
