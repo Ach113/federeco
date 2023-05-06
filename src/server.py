@@ -6,7 +6,6 @@ from dataset import Dataset
 from client import Client
 from typing import List
 import torch.nn
-import time
 import os
 
 
@@ -40,10 +39,9 @@ def run_server(dataset: Dataset,
 
     # evaluate the model
     test_data, negatives = dataset.load_test_file(), dataset.load_negative_file()
-    t = time.time()
     users, items = zip(*test_data)
     hr, ndcg = evaluate_model(server_model, users, items, negatives, k=10)
-    print(f'hit rate: {hr:.2f}, normalized discounted cumulative gain: {ndcg:.2f} [{time.time() - t:.2f}]s')
+    print(f'hit rate: {hr:.2f}, normalized discounted cumulative gain: {ndcg:.2f}')
 
     return server_model
 

@@ -28,13 +28,15 @@ def evaluate_model(model: torch.nn.Module,
     """
 
     hits, ndcgs = list(), list()
-    for i, user in enumerate(users):
-        item = items[i]
+    for user, item, neg in zip(users, items, negatives):
+
+        item_input = neg + [item]
 
         with torch.no_grad():
-            item_input = torch.tensor(np.array(negatives[i] + [item]), dtype=torch.int, device=DEVICE)
+            item_input_gpu = torch.tensor(np.array(item_input), dtype=torch.int, device=DEVICE)
             user_input = torch.tensor(np.full(len(item_input), user, dtype='int32'), dtype=torch.int, device=DEVICE)
-            pred, _ = model(user_input, item_input)
+            pred, _ = model(user_input, item_input_gpu)
+            pred = pred.cpu().numpy().tolist()
 
         map_item_score = dict(zip(item_input, pred))
         rank_list = heapq.nlargest(k, map_item_score, key=map_item_score.get)

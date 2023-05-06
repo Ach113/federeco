@@ -19,9 +19,9 @@ def parse_arguments():
                         help='number of training epochs, default 400')
     parser.add_argument('-s', '--save', default=True, metavar='save', action=argparse.BooleanOptionalAction,
                         help='flag that indicates if trained model should be saved')
-    parser.add_argument('-n', default=True, metavar='sample_size', type=int,
+    parser.add_argument('-n', default=50, metavar='sample_size', type=int,
                         help='number of clients to sample per epoch')
-    parser.add_argument('-l', default=True, metavar='local_epochs', type=int,
+    parser.add_argument('-l', default=3, metavar='local_epochs', type=int,
                         help='number of local training epochs')
     return parser.parse_args()
 
