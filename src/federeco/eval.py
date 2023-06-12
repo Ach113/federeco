@@ -23,8 +23,20 @@ def evaluate_model(model: torch.nn.Module,
                    users: List[int], items: List[int], negatives: List[List[int]],
                    k: int) -> Tuple[float, float]:
     """
-    calculates hit rate and normalized discounted cumulative gain for each user across each item in `negatives`
-    returns average of top-k list of hit rates and ndcgs
+    calculates hit rate and normalized discounted cumulative gain for each user.
+    - generates prediction of top-k recommendations using FedNCF model
+        FedNCF takes two inputs:
+            1. vector of user ids
+            2. item vector which contains negative samples plus single positive sample (item rated by user)
+    - hit rate is calculated based on whether the top-k recommendation list contains the positive item
+    - ndcg is calculated based on the position of the element in the top-k list
+
+    :param model: FedNCF model for generating recommendations
+    :param users: user ids in test dataset
+    :param items: items rated by users in test dataset
+    :param negatives: items not rated by the users in the test dataset
+    :param k: number of top recommendations to use when calculating hr/ndcg
+    :return: average hit rates and ndcgs in top-k recommendations
     """
 
     hits, ndcgs = list(), list()
