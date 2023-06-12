@@ -20,7 +20,9 @@ def get_metrics(rank_list: List, item: int) -> Tuple[int, float]:
 
 
 def evaluate_model(model: torch.nn.Module,
-                   users: List[int], items: List[int], negatives: List[List[int]],
+                   users: List[int],
+                   items: List[int],
+                   negatives: List[List[int]],
                    k: int) -> Tuple[float, float]:
     """
     calculates hit rate and normalized discounted cumulative gain for each user.
@@ -45,15 +47,17 @@ def evaluate_model(model: torch.nn.Module,
         item_input = neg + [item]
 
         with torch.no_grad():
-            item_input_gpu = torch.tensor(np.array(item_input), dtype=torch.int, device=DEVICE)
+            item_input_dev = torch.tensor(np.array(item_input), dtype=torch.int, device=DEVICE)
             user_input = torch.tensor(np.full(len(item_input), user, dtype='int32'), dtype=torch.int, device=DEVICE)
-            pred, _ = model(user_input, item_input_gpu)
+            pred, _ = model(user_input, item_input_dev)
             pred = pred.cpu().numpy().tolist()
 
         map_item_score = dict(zip(item_input, pred))
+        # get top-k recommendations
         rank_list = heapq.nlargest(k, map_item_score, key=map_item_score.get)
+        # check if item is present in the top-k list, if so, get associated ndcg
         hr, ndcg = get_metrics(rank_list, item)
         hits.append(hr)
         ndcgs.append(ndcg)
 
-    return np.array(hits).mean(), np.array(ndcgs).mean()
+    return sum(hits) / len(hits), sum(ndcgs) / len(ndcgs)
