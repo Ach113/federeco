@@ -34,16 +34,7 @@ def main():
     dataset = Dataset(args.dataset)
     # run the server to load the existing model or train & save a new one
     trained_model = run_server(dataset, num_clients=args.n, epochs=args.epochs,
-                               path=args.path, save=args.save, local_epochs=args.l, learning_rate=args.lr)
-    # pick random client & generate recommendations for them
-    clients = initialize_clients(dataset)
-    client, _ = sample_clients(clients, 1)
-    recommendations = client[0].generate_recommendation(server_model=trained_model, num_items=dataset.num_items, k=5)
-    print('Recommendations for user id:', client[0].client_id)
-    if args.dataset == 'movielens':
-        print(dataset.get_movie_names(recommendations))
-    else:
-        print(recommendations)
+                               path=args.path, save=args.save, local_epochs=args.l, learning_rate=args.learning_rate)
 
 
 if __name__ == '__main__':
