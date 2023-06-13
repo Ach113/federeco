@@ -11,7 +11,7 @@ def parse_arguments():
     )
 
     parser.add_argument('-d', '--dataset', default='movielens', metavar='dataset',
-                        choices=['movielens', 'pinterest'],
+                        choices=['movielens', 'pinterest', 'yelp'],
                         help='which dataset to use, default "movielens"')
     parser.add_argument('-p', '--path', default='pretrained/ncf.h5', metavar='path',
                         help='path where trained model is stored, default "pretrained/ncf.h5"')

@@ -1,4 +1,5 @@
 from typing import List
+import pandas as pd
 import scipy as sp
 import numpy as np
 import sys
@@ -7,6 +8,28 @@ import os
 from federeco.config import NUM_NEGATIVES
 
 # TODO: convert to pandas
+
+
+def read_yelp_dataset(test_size: float):
+    df = pd.read_csv('data/yelp_review.csv')
+    df = df.rename(columns={'business_id': 'item_id', 'stars': 'rating'})
+    columns = ['user_id', 'item_id', 'rating']
+    df = df[columns]
+    # label encoding
+    df['user_id'] = df['user_id'].astype('category').cat.codes
+    df['item_id'] = df['item_id'].astype('category').cat.codes
+    df['rating'] = df['rating'].astype('int')
+
+    # split into train/test
+    # TODO!: FIX THIS
+    unique_users = df['user_id'].unique()
+    pivot = int(len(unique_users) * (1 - test_size))
+
+    train_users = set(unique_users[:pivot])
+    train_df = df[df['user_id'].isin(train_users)]
+    test_df = df[~df['user_id'].isin(train_users)]
+
+    return train_df, test_df
 
 
 class Dataset:
@@ -21,24 +44,26 @@ class Dataset:
             s = 'pinterest-20'
             self.num_users = 55187
             self.num_items = 9916
+        elif data == 'yelp':
+            self.num_users = 1326101
+            self.num_items = 174567
+            self.train_df, self.test_df = read_yelp_dataset(test_size=0.3)
+            return
         else:
             print(f'Error: unknown dataset {data}')
             sys.exit(-1)
 
-        self.train_path = os.path.join('data', s + '.train.rating')
-        self.test_path = os.path.join('data', s + '.test.rating')
-        self.neg_path = os.path.join('data', s + '.test.negative')
+        columns = ['user_id', 'item_id', 'rating']
+        self.train_df = pd.read_csv(os.path.join('data', s + '-train.csv'), header=None, names=columns)
+        self.test_df = pd.read_csv(os.path.join('data', s + '-test.csv'), names=columns)
+        self.neg_path = os.path.join('data', s + '-neg.csv')
 
     def load_client_train_data(self) -> List:
         mat = sp.sparse.dok_matrix((self.num_users+1, self.num_items+1), dtype=np.float32)
-        with open(self.train_path, "r") as f:
-            line = f.readline()
-            while line is not None and line != "":
-                arr = line.split("\t")
-                user, item, rating = int(arr[0]), int(arr[1]), float(arr[2])
-                if rating > 0:
-                    mat[user, item] = 1.0
-                line = f.readline()
+
+        for user, item, rating in self.train_df.values:
+            if rating > 0:
+                mat[user, item] = 1.0
 
         client_datas = [[[], [], []] for _ in range(self.num_users)]
 
@@ -56,15 +81,7 @@ class Dataset:
         return client_datas
 
     def load_test_file(self) -> List[List[int]]:
-        rating_list = []
-        with open(self.test_path, "r") as f:
-            line = f.readline()
-            while line is not None and line != "":
-                arr = line.split("\t")
-                user, item = int(arr[0]), int(arr[1])
-                rating_list.append([user, item])
-                line = f.readline()
-        return rating_list
+        return [[user, item] for user, item, _ in self.test_df.values]
 
     def load_negative_file(self) -> List[List[int]]:
         negative_list = []
@@ -90,3 +107,13 @@ class Dataset:
             movie_names.append(movie_name)
 
         return [movie_names[i] for i in movie_ids]
+
+    @staticmethod
+    def generate_negatives(user_ids,
+                           item_ids,
+                           n: int):
+        """
+        generates `n` samples of negatives per user id
+        :return:
+        """
+        return

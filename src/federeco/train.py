@@ -17,7 +17,7 @@ def sample_clients(clients: List[Client], num_clients: int) -> Tuple[List[Client
     """
     sample = clients[:num_clients]
     # rotate the list by `num_clients`
-    clients = clients[num_clients:] + clients[:num_clients]
+    clients = clients[num_clients:] + sample
 
     return sample, clients
 
