@@ -7,30 +7,6 @@ import os
 
 from federeco.config import NUM_NEGATIVES
 
-# TODO: convert to pandas
-
-
-def read_yelp_dataset(test_size: float):
-    df = pd.read_csv('data/yelp_review.csv')
-    df = df.rename(columns={'business_id': 'item_id', 'stars': 'rating'})
-    columns = ['user_id', 'item_id', 'rating']
-    df = df[columns]
-    # label encoding
-    df['user_id'] = df['user_id'].astype('category').cat.codes
-    df['item_id'] = df['item_id'].astype('category').cat.codes
-    df['rating'] = df['rating'].astype('int')
-
-    # split into train/test
-    # TODO!: FIX THIS
-    unique_users = df['user_id'].unique()
-    pivot = int(len(unique_users) * (1 - test_size))
-
-    train_users = set(unique_users[:pivot])
-    train_df = df[df['user_id'].isin(train_users)]
-    test_df = df[~df['user_id'].isin(train_users)]
-
-    return train_df, test_df
-
 
 class Dataset:
 
@@ -45,10 +21,9 @@ class Dataset:
             self.num_users = 55187
             self.num_items = 9916
         elif data == 'yelp':
+            s = 'yelp-2018'
             self.num_users = 1326101
             self.num_items = 174567
-            self.train_df, self.test_df = read_yelp_dataset(test_size=0.3)
-            return
         else:
             print(f'Error: unknown dataset {data}')
             sys.exit(-1)
