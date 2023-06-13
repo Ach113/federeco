@@ -33,8 +33,15 @@ def main():
     # instantiate the dataset based on passed argument
     dataset = Dataset(args.dataset)
     # run the server to load the existing model or train & save a new one
-    trained_model = run_server(dataset, num_clients=args.n, epochs=args.epochs,
-                               path=args.path, save=args.save, local_epochs=args.l, learning_rate=args.learning_rate)
+    run_server(
+        dataset=dataset,
+        num_clients=args.n,
+        epochs=args.epochs,
+        path=args.path,
+        save=args.save,
+        local_epochs=args.l,
+        learning_rate=args.learning_rate
+    )
 
 
 if __name__ == '__main__':
