@@ -23,6 +23,8 @@ def parse_arguments():
                         help='number of clients to sample per epoch')
     parser.add_argument('-l', default=3, metavar='local_epochs', type=int,
                         help='number of local training epochs')
+    parser.add_argument('-lr', '--learning-rate', default=0.001, type=float, metavar='learning_rate',
+                        help='learning rate')
     return parser.parse_args()
 
 
@@ -32,7 +34,7 @@ def main():
     dataset = Dataset(args.dataset)
     # run the server to load the existing model or train & save a new one
     trained_model = run_server(dataset, num_clients=args.n, epochs=args.epochs,
-                               path=args.path, save=args.save, local_epochs=args.l)
+                               path=args.path, save=args.save, local_epochs=args.l, learning_rate=args.lr)
     # pick random client & generate recommendations for them
     clients = initialize_clients(dataset)
     client, _ = sample_clients(clients, 1)
