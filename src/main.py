@@ -9,12 +9,12 @@ def parse_arguments():
         description='federated recommendation system',
     )
 
-    parser.add_argument('-d', '--dataset', default='movielens', metavar='dataset',
+    parser.add_argument('-d', default='movielens', metavar='dataset',
                         choices=['movielens', 'pinterest', 'yelp'],
                         help='which dataset to use, default "movielens"')
-    parser.add_argument('-p', '--path', default='pretrained/ncf.h5', metavar='path',
+    parser.add_argument('-p', default='pretrained/ncf.h5', metavar='path',
                         help='path where trained model is stored, default "pretrained/ncf.h5"')
-    parser.add_argument('-e', '--epochs', default=400, metavar='epochs', type=int,
+    parser.add_argument('-e', default=400, metavar='epochs', type=int,
                         help='number of training epochs, default 400')
     parser.add_argument('-s', '--save', default=True, metavar='save', action=argparse.BooleanOptionalAction,
                         help='flag that indicates if trained model should be saved')
@@ -22,7 +22,7 @@ def parse_arguments():
                         help='number of clients to sample per epoch')
     parser.add_argument('-l', default=3, metavar='local_epochs', type=int,
                         help='number of local training epochs')
-    parser.add_argument('-lr', '--learning-rate', default=0.001, type=float, metavar='learning_rate',
+    parser.add_argument('-lr', default=0.001, type=float, metavar='learning_rate',
                         help='learning rate')
     return parser.parse_args()
 
