@@ -57,17 +57,21 @@ hr, ndcg = evaluate_model(model, users, items, negatives, k=10)
 ```
 ### Running the simulator
 ```
-usage: federeco [-h] [-d dataset] [-p path] [-e epochs]
+usage: federeco [-h] [-d dataset] [-p path] [-e epochs] [-s | --save | --no-save] [-n sample_size] [-l local_epochs]
+                [-lr learning_rate]
 
 federated recommendation system
 
 options:
-  -h, --help             show this help message and exit
-  -d dataset, --dataset  which dataset to use, default "movielens"
-  -p path, --path        path where trained model is stored, default "pretrained/ncf.h5"
-  -e epochs, --epochs    number of training epochs, default 400
-  -s, --save, --no-save  flag that indicates if trained model should be saved
-                         (default: True)
+  -h, --help            show this help message and exit
+  -d dataset            which dataset to use, default "movielens"
+  -p path               path where trained model is stored, default "pretrained/ncf.h5"
+  -e epochs             number of training epochs, default 400
+  -s, --save, --no-save
+                        flag that indicates if trained model should be saved (default: True)
+  -n sample_size        number of clients to sample per epoch
+  -l local_epochs       number of local training epochs
+  -lr learning_rate     learning rate
 ```
 
 `python src/main.py -d movielens -p pretrained/ncf_movielens.h5 -e 1000`
