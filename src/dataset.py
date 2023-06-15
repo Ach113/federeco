@@ -71,7 +71,7 @@ class Dataset:
 
     def load_negative_file(self) -> List[List[int]]:
         """
-        negative file provides items ids that have not been interacted with (for each unique client)
+        negative file provides item ids that have not been interacted with (for each unique client)
         file has the form of (user_id) [item_0, item_1, ...]
         :return: matrix where each row contains items not interacted with by the user in given index
         """
