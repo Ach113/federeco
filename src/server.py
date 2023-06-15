@@ -68,6 +68,8 @@ def initialize_clients(dataset: Dataset) -> List[Client]:
     client_dataset = dataset.load_client_train_data()
 
     for client_id in range(dataset.num_users):
+        if not client_dataset[client_id][0]:
+            continue
         c = Client(client_id)
         c.set_client_data(client_dataset[client_id])
         clients.append(c)
