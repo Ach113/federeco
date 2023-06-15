@@ -1,5 +1,4 @@
-from server import run_server, initialize_clients
-from federeco.train import sample_clients
+from server import run_server
 from dataset import Dataset
 import argparse
 
@@ -11,7 +10,7 @@ def parse_arguments():
     )
 
     parser.add_argument('-d', '--dataset', default='movielens', metavar='dataset',
-                        choices=['movielens', 'pinterest'],
+                        choices=['movielens', 'pinterest', 'yelp'],
                         help='which dataset to use, default "movielens"')
     parser.add_argument('-p', '--path', default='pretrained/ncf.h5', metavar='path',
                         help='path where trained model is stored, default "pretrained/ncf.h5"')
@@ -23,6 +22,8 @@ def parse_arguments():
                         help='number of clients to sample per epoch')
     parser.add_argument('-l', default=3, metavar='local_epochs', type=int,
                         help='number of local training epochs')
+    parser.add_argument('-lr', '--learning-rate', default=0.001, type=float, metavar='learning_rate',
+                        help='learning rate')
     return parser.parse_args()
 
 
@@ -31,17 +32,15 @@ def main():
     # instantiate the dataset based on passed argument
     dataset = Dataset(args.dataset)
     # run the server to load the existing model or train & save a new one
-    trained_model = run_server(dataset, num_clients=args.n, epochs=args.epochs,
-                               path=args.path, save=args.save, local_epochs=args.l)
-    # pick random client & generate recommendations for them
-    clients = initialize_clients(dataset)
-    client, _ = sample_clients(clients, 1)
-    recommendations = client[0].generate_recommendation(server_model=trained_model, num_items=dataset.num_items, k=5)
-    print('Recommendations for user id:', client[0].client_id)
-    if args.dataset == 'movielens':
-        print(dataset.get_movie_names(recommendations))
-    else:
-        print(recommendations)
+    run_server(
+        dataset=dataset,
+        num_clients=args.n,
+        epochs=args.epochs,
+        path=args.path,
+        save=args.save,
+        local_epochs=args.l,
+        learning_rate=args.learning_rate
+    )
 
 
 if __name__ == '__main__':

@@ -17,7 +17,7 @@ def sample_clients(clients: List[Client], num_clients: int) -> Tuple[List[Client
     """
     sample = clients[:num_clients]
     # rotate the list by `num_clients`
-    clients = clients[num_clients:] + clients[:num_clients]
+    clients = clients[num_clients:] + sample
 
     return sample, clients
 
@@ -26,13 +26,15 @@ def training_process(server_model: torch.nn.Module,
                      all_clients: List[Client],
                      num_clients: int,
                      epochs: int,
-                     local_epochs: int) -> dict[str, Any]:
+                     local_epochs: int,
+                     learning_rate: float) -> dict[str, Any]:
     """
     :param server_model: server model which is used for training
     :param all_clients: list of all clients in the system
     :param num_clients: number of clients to sample during single training iteration
     :param epochs: total number of training rounds
     :param local_epochs: number of local training epochs per global epoch
+    :param learning_rate: learning rate for the client model
     :return: weights of a trained model
 
     per single training round:
@@ -48,7 +50,7 @@ def training_process(server_model: torch.nn.Module,
         # sample `num_clients` clients for training
         clients, all_clients = sample_clients(all_clients, num_clients)
         # apply single round of training
-        w, loss = single_train_round(server_model, clients, local_epochs)
+        w, loss = single_train_round(server_model, clients, local_epochs, learning_rate)
         # aggregate weights
         updated_server_weights = federated_averaging(w)
         # set aggregated weights to server model
@@ -61,11 +63,13 @@ def training_process(server_model: torch.nn.Module,
 
 def single_train_round(server_model: torch.nn.Module,
                        clients: List[Client],
-                       local_epochs: int) -> Tuple[List[collections.OrderedDict], float]:
+                       local_epochs: int,
+                       learning_rate: float) -> Tuple[List[collections.OrderedDict], float]:
     """
     :param server_model: server model to train
     :param clients: list of `Client` objects, `Client` must implement `train()` method
     :param local_epochs: number of local training epochs per global epoch
+    :param learning_rate: learning rate for the client model
     :return: weights of each client models as a list
 
     single round of federated training, trains all clients in `clients` locally
@@ -74,7 +78,7 @@ def single_train_round(server_model: torch.nn.Module,
     mean_loss = 0
     for client in clients:
         server_model_copy = copy.deepcopy(server_model)
-        weights, loss = client.train(server_model_copy, local_epochs)
+        weights, loss = client.train(server_model_copy, local_epochs, learning_rate)
         mean_loss += float(loss.cpu().detach().numpy())
         client_weights.append(weights)
     return client_weights, mean_loss / len(client_weights)

@@ -17,11 +17,15 @@ class Client(ABC):
         self.client_id = client_id
 
     @abstractmethod
-    def train(self, server_model: torch.nn.Module, local_epochs: int) -> Tuple[dict[str, Any], Tensor]:
+    def train(self,
+              server_model: torch.nn.Module,
+              local_epochs: int,
+              learning_rate: float) -> Tuple[dict[str, Any], Tensor]:
         """
         single round of local training for client
         :param server_model: pytorch model that can be trained on user data
         :param local_epochs: number of local training epochs per global epoch
+        :param learning_rate: learning rate for the neural network
         :return: weights of the server model, training loss
         """
         pass

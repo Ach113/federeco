@@ -1,4 +1,4 @@
-from federeco.config import BATCH_SIZE, DEVICE, LEARNING_RATE
+from federeco.config import BATCH_SIZE, DEVICE
 from typing import List, Optional, Any, Tuple
 from torch import Tensor
 import pandas as pd
@@ -21,11 +21,12 @@ class Client(federeco.client.Client):
             'label': data_array[2]
         })
 
-    def train(self, server_model: torch.nn.Module, local_epochs: int) -> Tuple[dict[str, Any], Tensor]:
+    def train(self, server_model: torch.nn.Module, local_epochs: int, learning_rate: float) -> Tuple[dict[str, Any], Tensor]:
         """
         single round of local training for client
         :param server_model: pytorch model that can be trained on user data
         :param local_epochs: number of local training epochs per global epoch
+        :param learning_rate: learning rate for the neural network
         :return: weights of the server model, training loss
         """
         user_input, item_input = self.client_data['user_id'], self.client_data['item_id']
@@ -39,7 +40,7 @@ class Client(federeco.client.Client):
         dataset = torch.utils.data.TensorDataset(user_input, item_input, labels)
         dataloader = torch.utils.data.DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=True)
 
-        optimizer = torch.optim.AdamW(server_model.parameters(), lr=LEARNING_RATE)
+        optimizer = torch.optim.AdamW(server_model.parameters(), lr=learning_rate)
         loss = None
         for _ in range(local_epochs):
             for _, (u, i, l) in enumerate(dataloader):
