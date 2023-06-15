@@ -1,5 +1,4 @@
-from server import run_server, initialize_clients
-from federeco.train import sample_clients
+from server import run_server
 from dataset import Dataset
 import argparse
 
