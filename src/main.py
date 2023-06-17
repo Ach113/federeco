@@ -30,16 +30,16 @@ def parse_arguments():
 def main():
     args = parse_arguments()
     # instantiate the dataset based on passed argument
-    dataset = Dataset(args.dataset)
+    dataset = Dataset(args.d)
     # run the server to load the existing model or train & save a new one
     run_server(
         dataset=dataset,
         num_clients=args.n,
-        epochs=args.epochs,
-        path=args.path,
+        epochs=args.e,
+        path=args.p,
         save=args.save,
         local_epochs=args.l,
-        learning_rate=args.learning_rate
+        learning_rate=args.lr
     )
 
 
