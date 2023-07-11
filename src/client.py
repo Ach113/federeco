@@ -39,7 +39,8 @@ class Client(federeco.client.Client):
         # utilize dataloader to train in batches
         dataset = torch.utils.data.TensorDataset(user_input, item_input, labels)
         dataloader = torch.utils.data.DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=True)
-
+        # perturb the learning rate
+        learning_rate = abs(learning_rate + np.random.normal(0, .01, 1).squeeze())
         optimizer = torch.optim.AdamW(server_model.parameters(), lr=learning_rate)
         loss = None
         for _ in range(local_epochs):

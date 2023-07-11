@@ -1,3 +1,4 @@
+import matplotlib.pyplot as plt
 from typing import Tuple, List
 import numpy as np
 import heapq
@@ -55,9 +56,24 @@ def evaluate_model(model: torch.nn.Module,
         map_item_score = dict(zip(item_input, pred))
         # get top-k recommendations
         rank_list = heapq.nlargest(k, map_item_score, key=map_item_score.get)
-        # check if item is present in the top-k list, if so, get associated ndcg
+        # calculate hr & ndcg based on top-k recommendations
         hr, ndcg = get_metrics(rank_list, item)
         hits.append(hr)
         ndcgs.append(ndcg)
 
     return sum(hits) / len(hits), sum(ndcgs) / len(ndcgs)
+
+
+def plot_loss(epochs: int, loss: List[float], num_clients: int):
+    """
+    plots training loss across epochs
+    :param epochs: number of global training epochs
+    :param loss: list of loss per global epoch
+    :param num_clients: number of clients sampled per epoch
+    """
+    plt.plot(list(range(epochs)), loss)
+    plt.ylim(0.2, 0.8)
+    plt.xlabel('Epochs')
+    plt.ylabel('BCE Loss')
+    plt.title(f'Mean loss across {num_clients} clients per epoch')
+    plt.show()

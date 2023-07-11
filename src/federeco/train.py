@@ -1,10 +1,12 @@
-from typing import List, Any, Tuple
+from typing import List, Any, Tuple, Optional
+import pickle
 import collections
 import random
 import torch
 import copy
 import tqdm
 
+from federeco.eval import plot_loss
 from federeco.client import Client
 
 
@@ -27,7 +29,8 @@ def training_process(server_model: torch.nn.Module,
                      num_clients: int,
                      epochs: int,
                      local_epochs: int,
-                     learning_rate: float) -> dict[str, Any]:
+                     learning_rate: float,
+                     plot: Optional[bool] = True) -> dict[str, Any]:
     """
     :param server_model: server model which is used for training
     :param all_clients: list of all clients in the system
@@ -35,6 +38,7 @@ def training_process(server_model: torch.nn.Module,
     :param epochs: total number of training rounds
     :param local_epochs: number of local training epochs per global epoch
     :param learning_rate: learning rate for the client model
+    :param plot: parameter to enable plotting
     :return: weights of a trained model
 
     per single training round:
@@ -44,19 +48,26 @@ def training_process(server_model: torch.nn.Module,
     """
 
     random.shuffle(all_clients)
-
+    total_loss = list()
     pbar = tqdm.tqdm(range(epochs))
     for epoch in pbar:
         # sample `num_clients` clients for training
         clients, all_clients = sample_clients(all_clients, num_clients)
         # apply single round of training
         w, loss = single_train_round(server_model, clients, local_epochs, learning_rate)
+        total_loss.append(loss)
         # aggregate weights
         updated_server_weights = federated_averaging(w)
         # set aggregated weights to server model
         server_model.load_state_dict(updated_server_weights)
         # display progress bar with epochs & mean loss of single training round
         pbar.set_description(f'epoch: {epoch+1}, loss: {loss:.2f}')
+
+    if plot:
+        plot_loss(epochs, total_loss, num_clients)
+
+    with open('loss.pkl', 'wb') as f:
+        pickle.dump(total_loss, f)
 
     return server_model.state_dict()
 
@@ -66,13 +77,13 @@ def single_train_round(server_model: torch.nn.Module,
                        local_epochs: int,
                        learning_rate: float) -> Tuple[List[collections.OrderedDict], float]:
     """
+    single round of federated training, trains all clients in `clients` locally
+
     :param server_model: server model to train
     :param clients: list of `Client` objects, `Client` must implement `train()` method
     :param local_epochs: number of local training epochs per global epoch
     :param learning_rate: learning rate for the client model
-    :return: weights of each client models as a list
-
-    single round of federated training, trains all clients in `clients` locally
+    :return: weights of each client models as a list, mean train loss
     """
     client_weights = list()
     mean_loss = 0

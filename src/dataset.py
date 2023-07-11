@@ -20,7 +20,7 @@ class Dataset:
         self.test_df = pd.read_csv(os.path.join('data', dataset + '-test.csv'), names=columns)
         self.neg_path = os.path.join('data', dataset + '-neg.csv')
         self.num_users, self.num_items = self.get_matrix_dim()
-        print(f'Loaded `{dataset}` dataset: \nNumber of users: {self.num_users}, Number of items: {self.num_items}')
+        print(f'Loaded `{dataset}` dataset: \nNumber of users - {self.num_users}, Number of items - {self.num_items}')
 
     def get_matrix_dim(self) -> Tuple[int, int]:
         """
@@ -86,13 +86,3 @@ class Dataset:
                 negative_list.append(negatives)
                 line = f.readline()
         return negative_list
-
-    @staticmethod
-    def generate_negatives(user_ids,
-                           item_ids,
-                           n: int):
-        """
-        generates `n` samples of negatives per user id
-        :return:
-        """
-        return
