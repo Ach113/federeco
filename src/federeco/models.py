@@ -22,7 +22,7 @@ class NeuralCollaborativeFiltering(torch.nn.Module):
         self.mlp_embedding_item = torch.nn.Embedding(num_embeddings=num_items, embedding_dim=mlp_dim, device=DEVICE)
 
         self.mlp = torch.nn.ModuleList()
-        current_dim = 32
+        current_dim = 64
         for idx in range(1, len(layers)):
             self.mlp.append(torch.nn.Linear(current_dim, layers[idx]))
             current_dim = layers[idx]
@@ -34,11 +34,11 @@ class NeuralCollaborativeFiltering(torch.nn.Module):
                 target: Optional[Tensor] = None) -> Tuple[Tensor, Optional[float]]:
         # matrix factorization
         mf_user_latent = torch.nn.Flatten()(self.mf_embedding_user(user_input))
-        mf_item_latent = torch.nn.Flatten()(self.mf_embedding_user(item_input))
+        mf_item_latent = torch.nn.Flatten()(self.mf_embedding_item(item_input))
         mf_vector = torch.mul(mf_user_latent, mf_item_latent)
         # mlp
-        mlp_user_latent = torch.nn.Flatten()(self.mf_embedding_user(user_input))
-        mlp_item_latent = torch.nn.Flatten()(self.mf_embedding_item(item_input))
+        mlp_user_latent = torch.nn.Flatten()(self.mlp_embedding_user(user_input))
+        mlp_item_latent = torch.nn.Flatten()(self.mlp_embedding_item(item_input))
         mlp_vector = torch.cat([mlp_user_latent, mlp_item_latent], dim=1)
 
         for layer in self.mlp:
